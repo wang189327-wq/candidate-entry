@@ -1,21 +1,37 @@
-import { useState } from 'react'
-import { INITIAL_SAP_CONFIG } from '../data/sapConfig'
+import { useState, useEffect } from 'react'
+import { sb } from '../lib/supabase'
 
 // Tab2：SAP代码管理
 export default function Tab2() {
-  const [sapConfig, setSapConfig] = useState(() => {
-    try {
-      const stored = localStorage.getItem('sap_config')
-      return stored ? JSON.parse(stored) : INITIAL_SAP_CONFIG
-    } catch {
-      return INITIAL_SAP_CONFIG
-    }
-  })
-
+  const [sapConfig, setSapConfig] = useState({})
+  const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ city: '', pos: '', sap: '', note: '', published: '是' })
   const [editingKey, setEditingKey] = useState(null)
   const [cityFilter, setCityFilter] = useState('全部')
   const [pubFilter, setPubFilter] = useState('全部')
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  async function loadData() {
+    setLoading(true)
+    const { data, error } = await sb.from('sap_codes').select('*')
+    if (!error && data) {
+      const mapped = {}
+      data.forEach(row => {
+        mapped[row.position_name] = {
+          sap: row.sap_code,
+          city: row.store_name || '',
+          published: row.published || '否',
+          note: row.note || '',
+          _id: row.id
+        }
+      })
+      setSapConfig(mapped)
+    }
+    setLoading(false)
+  }
 
   // 城市列表
   const cities = ['全部', ...new Set(Object.values(sapConfig).map(c => c.city).filter(Boolean))]
@@ -32,36 +48,62 @@ export default function Tab2() {
   // 发布数量
   const pubCount = Object.values(sapConfig).filter(c => c.published === '是').length
 
-  function save() {
-    localStorage.setItem('sap_config', JSON.stringify(sapConfig))
-  }
-
-  function handleAddOrUpdate() {
+  async function handleAddOrUpdate() {
     if (!form.pos || !form.sap) {
       alert('岗位名称和SAP代码都不能为空')
       return
     }
-    setSapConfig(prev => {
-      const next = { ...prev }
-      if (editingKey && editingKey !== form.pos) {
-        delete next[editingKey]
+    const entry = { sap: form.sap, city: form.city, published: form.published, note: form.note }
+
+    if (editingKey && editingKey !== form.pos) {
+      // delete old key
+      const oldEntry = sapConfig[editingKey]
+      if (oldEntry && oldEntry._id) {
+        await sb.from('sap_codes').delete().eq('id', oldEntry._id)
       }
-      next[form.pos] = { sap: form.sap, city: form.city, published: form.published, note: form.note }
-      return next
-    })
-    save()
+    }
+
+    if (editingKey && editingKey === form.pos) {
+      // update
+      await sb.from('sap_codes').update({
+        sap_code: form.sap,
+        store_name: form.city,
+        published: form.published,
+        note: form.note
+      }).eq('id', sapConfig[editingKey]._id)
+    } else {
+      // insert
+      const oldEntry = sapConfig[form.pos]
+      if (oldEntry && oldEntry._id) {
+        await sb.from('sap_codes').update({
+          sap_code: form.sap,
+          store_name: form.city,
+          published: form.published,
+          note: form.note
+        }).eq('id', oldEntry._id)
+      } else {
+        await sb.from('sap_codes').insert({
+          position_name: form.pos,
+          sap_code: form.sap,
+          store_name: form.city,
+          published: form.published,
+          note: form.note
+        })
+      }
+    }
+
+    await loadData()
     setEditingKey(null)
     setForm({ city: '', pos: '', sap: '', note: '', published: '是' })
   }
 
-  function handleDelete(key) {
+  async function handleDelete(key) {
     if (!confirm(`确定要删除岗位「${key}」吗？`)) return
-    setSapConfig(prev => {
-      const next = { ...prev }
-      delete next[key]
-      return next
-    })
-    save()
+    const entry = sapConfig[key]
+    if (entry && entry._id) {
+      await sb.from('sap_codes').delete().eq('id', entry._id)
+    }
+    await loadData()
     if (editingKey === key) {
       setEditingKey(null)
       setForm({ city: '', pos: '', sap: '', note: '', published: '是' })
@@ -84,11 +126,11 @@ export default function Tab2() {
     <div className="flex gap-4 p-4 h-full" style={{ minHeight: 'calc(100vh - 110px)' }}>
       {/* 左侧表单 */}
       <div className="w-72 flex flex-col gap-3">
-        {/* 统计 */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-blue-600">
             岗位发布数：{pubCount}
           </span>
+          <span className="text-xs text-gray-400">{loading ? '加载中...' : '已同步云端'}</span>
         </div>
 
         {/* 筛选 */}
@@ -195,7 +237,15 @@ export default function Tab2() {
               </tr>
             </thead>
             <tbody>
-              {filteredEntries.map(([key, cfg], idx) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-gray-400 text-sm">加载中...</td>
+                </tr>
+              ) : filteredEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-gray-400 text-sm">暂无数据</td>
+                </tr>
+              ) : filteredEntries.map(([key, cfg], idx) => (
                 <tr
                   key={key}
                   className="border-t border-gray-50 hover:bg-indigo-50 cursor-pointer"
@@ -221,11 +271,6 @@ export default function Tab2() {
                   </td>
                 </tr>
               ))}
-              {filteredEntries.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-400 text-sm">暂无数据</td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
