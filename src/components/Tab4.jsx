@@ -193,7 +193,7 @@ export default function Tab4() {
           {isAdmin && (
             <button onClick={handleAdd}
               className="text-xs px-3 py-1 rounded text-white" style={{ backgroundColor: '#A8D4A8' }}>
-              + 新增
+              + 新增账号
             </button>
           )}
         </div>
@@ -300,10 +300,7 @@ export default function Tab4() {
                 className="px-6 py-2 rounded text-sm text-white" style={{ backgroundColor: '#FFCCCC', color: '#c00' }}>
                 删除
               </button>
-              <button onClick={handleAdd}
-                className="px-6 py-2 rounded text-sm border border-gray-300 text-gray-600 hover:bg-gray-50">
-                + 新增
-              </button>
+
             </>
           )}
         </div>
