@@ -71,12 +71,15 @@ export default function Tab3() {
 
     for (const file of files) {
       try {
-        const filePath = `${user.username || 'upload'}/${Date.now()}_${file.name}`
+        // 清理文件名：去掉路径和特殊字符，只保留文件名
+        const cleanName = file.name.replace(/^[A-Za-z]:\\[^\\]+\\/, '').replace(/[\\/]/g, '_')
+        const filePath = `${Date.now()}_${cleanName}`
+
         const { error: uploadError } = await sb.storage.from('images').upload(filePath, file, { upsert: true })
         if (uploadError) throw uploadError
 
-        const { data: urlData } = sb.storage.from('images').getPublicUrl(filePath)
-        const publicUrl = urlData.publicUrl
+        // 手动拼接 public URL（避免 SDK 返回 null）
+        const publicUrl = `https://zwzaultkadnoglwkvnrs.supabase.co/storage/v1/object/public/images/${filePath}`
 
         const { error: insertError } = await sb.from('images').insert({
           name: file.name,
