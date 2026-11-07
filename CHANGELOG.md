@@ -14,10 +14,12 @@
 
 - README 在线演示地址改指 GitHub Pages（已上线最新版）；Vercel 镜像徽章保留待更新。
 - 仓库 About 的 Homepage 同步更新为 GitHub Pages 地址。
-- **自定义域名与项目解绑**：Vercel 项目 `portfolio-web` 上移除 `katherineportfolio.cn`
+- **自定义域名与项目解绑**：Vercel 项目 `candidate-entry` 上移除 `katherineportfolio.cn`
   与 `www.katherineportfolio.cn` 两个自定义域名（含主域名指向 `www` 的重定向规则），
-  域名已完全释放，可用于其他项目。站点本身不受影响，仍可通过
-  `portfolio-web-wine-nine.vercel.app` 与 GitHub Pages 访问。
+  并触发新部署以刷新生产别名的历史快照。域名与项目已完全解绑，可用于其他项目。
+  站点本身不受影响，仍可通过 `portfolio-web-wine-nine.vercel.app` 与 GitHub Pages 访问。
+  注：账号层仍保留 `katherineportfolio.cn` 的域名条目（Vercel 不开放该项删除权限），
+  但该条目已不指向任何部署，不影响解绑结果；如需彻底清除需在 Vercel 控制台手动操作。
 - **云端 Supabase 五张表已清空**：`candidates` / `sap_codes` / `images` / `feishu_accounts` /
   `program_users` 的历史数据（含真实候选人手机号、微信号）全部删除，
   仅保留重建的 `admin` 演示账号以维持 README 中的登录说明可用。
