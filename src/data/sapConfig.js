@@ -9,12 +9,13 @@ export const INITIAL_SAP_CONFIG = {
   '招聘实习生（广州）': { sap: 'SAP007', city: '广州', published: '是', note: '' },
 }
 
+// 初始飞书账号（占位示例，真实凭证在 Tab4 中由用户自行配置，仅存于本地/云端自己的账号体系）
 export const INITIAL_ACCOUNTS = [
   {
-    alias: '王馨梅',
-    app_id: 'cli_a97af88467781bcb',
-    app_secret: 'Ypg1jnWwrDDZU3CQ1okOKAQPVzi7paKC',
-    app_token: 'FuB2bd5ovazQPPsJEdTc9xovn3v',
+    alias: '示例账号（请填入你自己的飞书应用凭证）',
+    app_id: 'cli_xxxxxxxxxxxxxxxx',
+    app_secret: 'your_app_secret_here',
+    app_token: 'your_bitable_app_token_here',
     active: true,
   },
 ]
