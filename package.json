@@ -2,6 +2,25 @@
   "name": "candidate-entry",
   "version": "2.1.0",
   "description": "求职者信息录入工具 —— 聊天记录解析、SAP 岗位匹配、一键写入可插拔目标系统",
+  "license": "MIT",
+  "author": "Wang Mei <wang189327-wq@users.noreply.github.com>",
+  "homepage": "https://wang189327-wq.github.io/candidate-entry/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wang189327-wq/candidate-entry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wang189327-wq/candidate-entry/issues"
+  },
+  "keywords": [
+    "react",
+    "vite",
+    "tailwind",
+    "supabase",
+    "recruitment",
+    "automation",
+    "webhook"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

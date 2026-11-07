@@ -35,7 +35,7 @@ npm run verify
 - 一个 PR 只做一件事，标题用中文祈使句（如「修复：代理前缀拼接破坏 query 语义」）
 - 提交信息格式：`type: 摘要`，type 取值 `feat` / `fix` / `docs` / `test` / `chore` / `refactor`
 - 新增功能请同步更新 `CHANGELOG.md` 的 `[Unreleased]` 段
-- 若改动了解析逻辑或适配器契约，**必须补单元测试** —— CI 会检查覆盖率不允许回退
+- 若改动了解析逻辑或适配器契约，**必须补单元测试** —— CI 会运行 `npm test`，任一用例失败即阻断合并。本地可用 `npm run coverage` 查看覆盖率报告
 
 ## 代码风格
 

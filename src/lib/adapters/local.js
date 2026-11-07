@@ -5,8 +5,11 @@ import { RECORD_FIELDS, recordToObject } from './types'
 export function toCSV(records) {
   const header = RECORD_FIELDS.join(',')
   const escape = (v) => {
-    const s = String(v ?? '')
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    let s = String(v ?? '')
+    // 中和公式注入：Excel / WPS 会把以 = + - @ 开头的单元格当公式执行。
+    // 这些值来自外部粘贴的聊天记录，属于不可信输入，必须前置单引号转义。
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const rows = records.map((r) => RECORD_FIELDS.map((f) => escape(recordToObject(r)[f])).join(','))
   return [header, ...rows].join('\n')

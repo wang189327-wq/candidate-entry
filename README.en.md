@@ -54,21 +54,31 @@ Not a one-shot portfolio piece — it went through 6 iterations driven by real b
 | Module | Capability |
 |---|---|
 | **Tab1 Parsing** | Paste chat log → regex-extract name / phone / WeChat / age / store; store name → SAP code auto-lookup; write to the configured target |
-| **Tab2 SAP Codes** | Tree-based management of store ↔ position ↔ SAP mappings: fuzzy search, CRUD, inline edit, publish stats, column-width memory |
-| **Tab3 Image Library** | Business screenshots (store manager contacts): preview / fullscreen / copy-to-clipboard / upload as Feishu attachment |
+| **Tab2 SAP Codes** | Table-based management of store ↔ position ↔ SAP mappings: filter by city / publish status, CRUD, double-click a row to edit, publish stats |
+| **Tab3 Image Library** | Unified store-asset storage: preview / fullscreen view / copy image path & link, upload to cloud storage, group by SAP code |
 | **Tab4 Accounts** | System account management: create/edit users and reset passwords (admins see all, regular users only their own); also holds Feishu app credentials (App ID / App Secret / App Token) used by the Feishu write target |
 | **Tab5 Integrations** | **Pluggable write target**: Feishu Base / any Webhook (DingTalk, WeCom, custom API) / Supabase / local CSV export — switch + test connectivity in one click |
-| **System** | Auth (local bcrypt / Supabase), user management, single-instance guard, layout persistence, tab state preserved across switches |
+| **System** | Auth (bcrypt), user management, tab state preserved across switches |
 
 ### 📸 Screens
 
-| Tab1 Parsing | Tab2 SAP Codes |
-|---|---|
-| ![Tab1](docs/images/tab1-blank.png) | ![Tab2](docs/images/tab2-sap.png) |
+Two variants per tab — **empty state** (initial screen) and **working state** (after parsing / selection).
 
-| Tab3 Image Library | Tab4 Accounts | Tab5 Integrations |
+| Empty · Tab1 Parsing | Empty · Tab2 SAP Codes |
+|---|---|
+| ![Tab1 empty](docs/images/tab1-empty.png) | ![Tab2 empty](docs/images/tab2-empty.png) |
+
+| Empty · Tab3 Image Library | Empty · Tab4 Accounts | Empty · Tab5 Integrations |
 |---|---|---|
-| ![Tab3](docs/images/tab3-images.png) | ![Tab4](docs/images/tab4-accounts.png) | ![Tab5](docs/images/tab5-integration.png) |
+| ![Tab3 empty](docs/images/tab3-empty.png) | ![Tab4 empty](docs/images/tab4-empty.png) | ![Tab5 empty](docs/images/tab5-empty.png) |
+
+| Working · Tab1 Parsing | Working · Tab2 SAP Codes |
+|---|---|
+| ![Tab1 working](docs/images/tab1-filled.png) | ![Tab2 working](docs/images/tab2-filled.png) |
+
+| Working · Tab3 Image Library | Working · Tab4 Accounts | Working · Tab5 Integrations |
+|---|---|---|
+| ![Tab3 working](docs/images/tab3-filled.png) | ![Tab4 working](docs/images/tab4-filled.png) | ![Tab5 working](docs/images/tab5-filled.png) |
 
 ### 🔌 Pluggable write target (Feishu is optional)
 
@@ -123,10 +133,11 @@ Every push to `main` triggers both pipelines: GitHub Actions runs the build chec
 
 | Stage | Tool | Coverage |
 |---|---|---|
-| Unit tests | Vitest | 64 tests: parser 27 · adapter contract 17 · CSV escaping 8 · HTTP wrapper 12 |
+| Unit tests | Vitest | 80 tests: parser 40 · adapter contract 17 · HTTP wrapper 12 · CSV escaping 11 |
 | Lint | ESLint | react / react-hooks plugins, currently **zero warnings** |
 | Formatting | Prettier | all JS/JSX/JSON, `format:check` runs in CI |
-| Secret scan | custom script | scans all 41 tracked files, blocks on any hit |
+| Secret scan | custom script | scans all 73 tracked files, blocks on any hit |
+| Dependency audit | npm audit | production deps only, high-severity issues block CI |
 | Desktop syntax | Python AST | full parse of the 2469-line single file |
 
 ```bash
@@ -147,7 +158,7 @@ npm run dev          # http://localhost:5173
 npm run verify       # lint + format:check + test + build
 ```
 
-Cloud features (login / SAP sync / cloud writes) require your own Supabase project — see [`.env.example`](./.env.example). Without Supabase, Tab1~Tab4 remain fully functional via localStorage, and the write target can be switched to Feishu / Webhook / local export in the "Integration" tab.
+Cloud features (login / SAP sync / cloud writes) connect to the bundled public demo project by default. To use your own Supabase, copy [`.env.example`](./.env.example) to `.env.local` and fill in `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (the browser only ever gets the anon key — configure RLS accordingly). The desktop build reads `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` as real environment variables; `.env.local` has no effect on Python.
 
 ### Desktop
 
@@ -161,10 +172,11 @@ See [`desktop/README.md`](./desktop/README.md) to connect your own Feishu app.
 
 ## 🔒 Privacy & Security
 
-- All secrets removed from source; injected via env vars / config files (`.env.example`)
+- **Sensitive secrets** (service_role keys, Feishu App Secrets, DB passwords) are never committed — they are injected via env vars / config files (`.env.example`). Source only keeps the Supabase **anon key**, which is public by design and protected by RLS; it can be overridden with `VITE_SUPABASE_*`.
 - Real business screenshots (store manager contact info) are **not** distributed in this repo
 - `sap_config.json` / `feishu_accounts.json` contain sample data only
 - The public demo Supabase project ships sample data as well (1 SAP code); the full 400+ entry library lives in the production environment
+- The live demo does its role check in the browser for easy trial — **never enter real candidate data or real credentials there**; see [SECURITY.md](./SECURITY.md) for the hardening checklist before production use
 
 ## 📄 License
 

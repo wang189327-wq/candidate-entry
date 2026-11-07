@@ -74,8 +74,9 @@ export default function Tab3() {
         const { error: uploadError } = await sb.storage.from('images').upload(filePath, file, { upsert: true })
         if (uploadError) throw uploadError
 
-        // 手动拼接 public URL（避免 SDK 返回 null）
-        const publicUrl = `https://zwzaultkadnoglwkvnrs.supabase.co/storage/v1/object/public/images/${filePath}`
+        // public URL 交给 SDK 生成（编码、路径转义由 SDK 处理）
+        const { data: urlData } = sb.storage.from('images').getPublicUrl(filePath)
+        const publicUrl = urlData?.publicUrl || ''
 
         const { error: insertError } = await sb.from('images').insert({
           name: file.name,
@@ -186,6 +187,15 @@ export default function Tab3() {
         <div
           className="flex-1 flex items-center justify-center overflow-hidden p-4 bg-white cursor-pointer"
           onClick={() => selected && setPreviewFull(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              if (selected) setPreviewFull(true)
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={selected ? `放大查看 ${selected.label}` : '暂无图片'}
         >
           {selected ? (
             <img
@@ -237,6 +247,12 @@ export default function Tab3() {
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center"
           onClick={() => setPreviewFull(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setPreviewFull(false)
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="关闭图片预览"
         >
           <img
             src={selected.src}

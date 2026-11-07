@@ -8,7 +8,7 @@
 
 ### 新增
 
-- **单元测试体系**：引入 Vitest，共 64 项测试覆盖解析层、适配器契约、CSV 转义与 HTTP 封装；
+- **单元测试体系**：引入 Vitest，共 64 项测试覆盖解析层、适配器契约、CSV 转义与 HTTP 封装（后续随解析层加固扩充至 77 项）；
   `npm test` 可本地运行，CI 中作为合并门禁。
 - **代码规范工具链**：ESLint（react / react-hooks 插件）+ Prettier，
   新增 `lint` / `lint:fix` / `format` / `format:check` / `coverage` / `verify` 脚本。

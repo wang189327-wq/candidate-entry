@@ -9,9 +9,20 @@ desktop/program_users.json
 desktop/user_feishu_bindings.json
 desktop/数据/feishu_accounts.json
 
-# 本地环境变量
+# 桌面版运行时生成的业务数据（含真实候选人信息与门店联系方式，勿提交）
+desktop/数据/候选人记录.csv
+desktop/数据/SAP图片库/
+desktop/数据/固定图片/
+desktop/__pycache__/
+*.pyc
+
+# 本地环境变量（.env.example 为模板，需保留）
 .env
-.env.local
+.env.*
+!.env.example
+
+# Vercel CLI 本地状态
+.vercel/
 
 # 编辑器
 .vscode/

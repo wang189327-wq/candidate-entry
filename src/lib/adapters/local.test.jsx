@@ -55,4 +55,22 @@ describe('toCSV', () => {
     expect(lines[1].split(',')).toHaveLength(7)
     expect(lines[2].split(',')).toHaveLength(7)
   })
+
+  // 公式注入：姓名等字段来自外部粘贴的聊天记录，属于不可信输入。
+  // Excel / WPS 会把以 = + - @ 开头的单元格当公式执行，需前置单引号中和。
+  it('以 = 开头的字段前置单引号，防止公式注入', () => {
+    const csv = toCSV([{ 姓名: '=1+1' }])
+    expect(csv.split('\n')[1].startsWith("'=1+1")).toBe(true)
+  })
+
+  it('以 + - @ 开头的字段同样被中和', () => {
+    expect(toCSV([{ 姓名: '+1+1' }]).split('\n')[1]).toBe("'+1+1,,,,,,")
+    expect(toCSV([{ 姓名: '-1+1' }]).split('\n')[1]).toBe("'-1+1,,,,,,")
+    expect(toCSV([{ 姓名: '@SUM(A1)' }]).split('\n')[1]).toBe("'@SUM(A1),,,,,,")
+  })
+
+  it('字段含回车符时加引号包裹，避免错行', () => {
+    const csv = toCSV([{ 姓名: 'a\rb' }])
+    expect(csv).toContain('"a\rb"')
+  })
 })

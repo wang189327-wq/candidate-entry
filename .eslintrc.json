@@ -12,9 +12,10 @@
     "plugin:react/recommended",
     "plugin:react/jsx-runtime",
     "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended",
     "prettier"
   ],
-  "plugins": ["react", "react-hooks"],
+  "plugins": ["react", "react-hooks", "jsx-a11y"],
   "rules": {
     "no-unused-vars": ["warn", { "args": "none", "varsIgnorePattern": "^_" }],
     "no-console": "off",

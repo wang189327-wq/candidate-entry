@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { parseText, lookupSapByStore, generateSampleText } from '../utils/parseText.jsx'
 import { generateAllSampleImages } from '../utils/generateImages.jsx'
 import { sb } from '../lib/supabase'
@@ -235,13 +235,14 @@ export default function Tab1() {
             />
           </FieldRow>
           <div className="flex items-center">
-            <label
+            <span
               className="w-28 text-sm px-3 py-1.5 rounded text-right"
               style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
+              aria-hidden="true"
             >
               性别：
-            </label>
-            <div className="flex gap-3">
+            </span>
+            <div className="flex gap-3" role="radiogroup" aria-label="性别">
               {['女', '男'].map((opt) => (
                 <label key={opt} className="flex items-center gap-1 cursor-pointer">
                   <input
@@ -267,13 +268,14 @@ export default function Tab1() {
             />
           </FieldRow>
           <div className="flex items-center">
-            <label
+            <span
               className="w-28 text-sm px-3 py-1.5 rounded text-right"
               style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
+              aria-hidden="true"
             >
               意向岗位：
-            </label>
-            <div className="flex gap-3">
+            </span>
+            <div className="flex gap-3" role="radiogroup" aria-label="意向岗位">
               {['全职', '兼职', '店长'].map((opt) => (
                 <label key={opt} className="flex items-center gap-1 cursor-pointer">
                   <input
@@ -299,13 +301,14 @@ export default function Tab1() {
             />
           </FieldRow>
           <div className="flex items-center">
-            <label
+            <span
               className="w-28 text-sm px-3 py-1.5 rounded text-right"
               style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
+              aria-hidden="true"
             >
               店长手机号：
-            </label>
-            <div className="flex items-center gap-3 flex-1">
+            </span>
+            <div className="flex items-center gap-3 flex-1" role="group" aria-label="店长手机号">
               {shopPhoneImg ? (
                 <img
                   src={shopPhoneImg}
@@ -318,13 +321,14 @@ export default function Tab1() {
             </div>
           </div>
           <div className="flex items-center">
-            <label
+            <span
               className="w-28 text-sm px-3 py-1.5 rounded text-right"
               style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
+              aria-hidden="true"
             >
               常用图片：
-            </label>
-            <div className="flex items-center gap-3 flex-1">
+            </span>
+            <div className="flex items-center gap-3 flex-1" role="group" aria-label="常用图片">
               {sampleImages?.common && (
                 <img
                   src={sampleImages.common}
@@ -335,13 +339,14 @@ export default function Tab1() {
             </div>
           </div>
           <div className="flex items-center">
-            <label
+            <span
               className="w-28 text-sm px-3 py-1.5 rounded text-right"
               style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
+              aria-hidden="true"
             >
               门店门面：
-            </label>
-            <div className="flex items-center gap-3 flex-1">
+            </span>
+            <div className="flex items-center gap-3 flex-1" role="group" aria-label="门店门面">
               {sampleImages?.superCang && (
                 <img
                   src={sampleImages.superCang}
@@ -390,15 +395,22 @@ export default function Tab1() {
 }
 
 function FieldRow({ label, required, children }) {
+  // 自动生成 id，把标签与输入框关联起来（读屏软件可正确朗读字段名）
+  const id = useId()
+  const control =
+    children && typeof children === 'object' && !Array.isArray(children)
+      ? { ...children, props: { ...children.props, id: children.props.id || id } }
+      : children
   return (
     <div className="flex items-center">
       <label
+        htmlFor={id}
         className="w-28 text-sm px-3 py-1.5 rounded text-right"
         style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
       >
         {label}：{required && <span className="text-red-400">*</span>}
       </label>
-      <div className="flex-1 flex gap-2 items-center">{children}</div>
+      <div className="flex-1 flex gap-2 items-center">{control}</div>
     </div>
   )
 }

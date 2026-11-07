@@ -57,7 +57,7 @@ Web 版（React）在其基础上增加了云端同步与可配置的写入目�
 | 项 | 选型 |
 |---|---|
 | 框架 | React 18 |
-| 构建 | Vite 5 |
+| 构建 | Vite 7 |
 | 样式 | Tailwind CSS（自定义色板） |
 | 持久化 | localStorage（配置）+ Supabase（数据） |
 | 部署 | GitHub Pages（主）+ Vercel（备） |
@@ -156,14 +156,14 @@ src/
 │   └── generateImages.jsx  # 示例图片生成
 ├── data/
 │   └── sapConfig.js        # SAP 岗位代码库
-└── styles/
+└── index.css               # 全局样式（Tailwind 指令 + 主题变量）
 ```
 
 ---
 
 ## 4. 桌面版（Tkinter）
 
-- 单文件实现：`desktop/求职者信息录入.py`（约 2460 行）
+- 单文件实现：`desktop/求职者信息录入.py`（2469 行）
 - 两个类：`LoginWindow`（登录）、`App`（主应用，继承 `tk.Tk`）
 - **写入路由**：按 `数据/integration_config.json` 的 `target` 分发到
   `_do_write_feishu` / `_write_via_webhook` / `_write_to_csv`
@@ -194,6 +194,8 @@ src/
 1. `npm ci` + `npm run build` —— 构建校验
 2. Python AST 解析 —— 桌面版语法校验
 3. `scripts/secret_scan.py` —— 密钥泄漏扫描
+
+此外代码规范与单元测试同样纳入门禁：`npm run lint`（ESLint）、`npm run format:check`（Prettier）、`npm test`（Vitest）均在 CI 中执行，任一失败即阻断合并。
 
 ### 6.2 自动部署
 

@@ -55,10 +55,13 @@ export default function Tab5() {
         </div>
         <div className="flex-1 overflow-auto p-2">
           {ADAPTERS.map((a) => (
-            <div
+            <button
               key={a.id}
+              type="button"
+              role="tab"
+              aria-selected={adapterId === a.id}
               onClick={() => setAdapterId(a.id)}
-              className={`p-3 rounded mb-1 cursor-pointer border transition ${
+              className={`block w-full text-left p-3 rounded mb-1 cursor-pointer border transition ${
                 adapterId === a.id ? 'border-purple bg-indigo-50' : 'border-transparent hover:bg-gray-50'
               }`}
             >
@@ -67,7 +70,7 @@ export default function Tab5() {
                 {a.name}
               </div>
               <div className="text-xs text-gray-400 mt-1 leading-relaxed">{a.desc}</div>
-            </div>
+            </button>
           ))}
         </div>
         <div className="px-4 py-3 border-t border-gray-100 text-xs text-gray-400 leading-relaxed">

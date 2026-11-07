@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: vercel
   cancel-in-progress: true
@@ -16,6 +19,9 @@ jobs:
 
     # 注意：jobs.<job_id>.if 只支持 github / needs / vars / inputs 上下文，
     # env 与 secrets 都不可用，因此「是否配置了 Token」必须在步骤级用 env 判断。
+    #
+    # secret 只在真正需要它的发布步骤通过 with: 传入，
+    # 避免 job 级 env 让 Token 扩散到 npm ci / build 等所有后续步骤。
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

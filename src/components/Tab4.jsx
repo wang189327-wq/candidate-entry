@@ -262,8 +262,11 @@ export default function Tab4() {
           <div className="space-y-4">
             {/* 用户名 */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">用户名</label>
+              <label htmlFor="acc-username" className="block text-sm text-gray-600 mb-1">
+                用户名
+              </label>
               <input
+                id="acc-username"
                 value={form.alias}
                 onChange={(e) => setForm((p) => ({ ...p, alias: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
@@ -272,11 +275,12 @@ export default function Tab4() {
             </div>
             {/* 账号密码 */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label htmlFor="acc-password" className="block text-sm text-gray-600 mb-1">
                 账号密码{selectedIdx !== null ? '（留空不修改）' : ''}
               </label>
               <div className="relative">
                 <input
+                  id="acc-password"
                   type={showPwd ? 'text' : 'password'}
                   value={form.password}
                   onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
@@ -293,8 +297,11 @@ export default function Tab4() {
             </div>
             {/* App ID */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">App ID</label>
+              <label htmlFor="acc-app-id" className="block text-sm text-gray-600 mb-1">
+                App ID
+              </label>
               <input
+                id="acc-app-id"
                 value={form.app_id_key}
                 onChange={(e) => setForm((p) => ({ ...p, app_id_key: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
@@ -303,9 +310,12 @@ export default function Tab4() {
             </div>
             {/* App Secret */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">App Secret</label>
+              <label htmlFor="acc-app-secret" className="block text-sm text-gray-600 mb-1">
+                App Secret
+              </label>
               <div className="relative">
                 <input
+                  id="acc-app-secret"
                   type={showSecret ? 'text' : 'password'}
                   value={form.app_secret_key}
                   onChange={(e) => setForm((p) => ({ ...p, app_secret_key: e.target.value }))}
@@ -322,8 +332,11 @@ export default function Tab4() {
             </div>
             {/* App Token */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">App Token</label>
+              <label htmlFor="acc-app-token" className="block text-sm text-gray-600 mb-1">
+                App Token
+              </label>
               <input
+                id="acc-app-token"
                 value={form.app_token_key}
                 onChange={(e) => setForm((p) => ({ ...p, app_token_key: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
@@ -370,7 +383,6 @@ export default function Tab4() {
               onKeyDown={(e) => e.key === 'Enter' && handleVerifySubmit()}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:border-purple"
               placeholder="输入验证码：118814"
-              autoFocus
             />
             <div className="flex gap-2">
               <button

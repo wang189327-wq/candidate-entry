@@ -7,6 +7,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# 权限最小化：CI 只需要读取仓库内容
+permissions:
+  contents: read
+
+# 同一分支连续 push 时取消旧任务，避免浪费 runner 与徽章状态错乱
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: 构建校验（Web 版）
@@ -25,6 +34,9 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
+      - name: 依赖漏洞审计（生产依赖）
+        run: npm audit --audit-level=high --omit=dev
+
       - name: 代码规范检查（ESLint）
         run: npm run lint
 
@@ -38,6 +50,9 @@ jobs:
         run: npm run build
 
       - name: Python 语法校验（桌面版）
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
         run: |
           python - <<'PY'
           import ast, pathlib
@@ -54,6 +69,11 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: 扫描硬编码凭证
         run: python scripts/secret_scan.py

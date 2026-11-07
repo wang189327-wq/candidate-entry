@@ -145,8 +145,11 @@ export default function Tab2() {
         {/* 筛选 */}
         <div className="bg-white rounded p-3 space-y-2">
           <div className="flex items-center gap-2">
-            <label className="text-xs w-12 text-right text-gray-500">城市筛选</label>
+            <label htmlFor="filter-city" className="text-xs w-12 text-right text-gray-500">
+              城市筛选
+            </label>
             <select
+              id="filter-city"
               className="flex-1 px-2 py-1 rounded text-sm border"
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
@@ -157,8 +160,11 @@ export default function Tab2() {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs w-12 text-right text-gray-500">是否发布</label>
+            <label htmlFor="filter-pub" className="text-xs w-12 text-right text-gray-500">
+              是否发布
+            </label>
             <select
+              id="filter-pub"
               className="flex-1 px-2 py-1 rounded text-sm border"
               value={pubFilter}
               onChange={(e) => setPubFilter(e.target.value)}
@@ -173,16 +179,22 @@ export default function Tab2() {
         {/* 输入表单 */}
         <div className="bg-white rounded p-3 space-y-2">
           <div className="flex items-center gap-2">
-            <label className="text-xs w-14 text-right text-gray-500">岗位城市</label>
+            <label htmlFor="form-city" className="text-xs w-14 text-right text-gray-500">
+              岗位城市
+            </label>
             <input
+              id="form-city"
               className="flex-1 px-2 py-1 rounded text-sm border"
               value={form.city}
               onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs w-14 text-right text-gray-500">岗位名称</label>
+            <label htmlFor="form-pos" className="text-xs w-14 text-right text-gray-500">
+              岗位名称
+            </label>
             <input
+              id="form-pos"
               className="flex-1 px-2 py-1 rounded text-sm border"
               value={form.pos}
               placeholder="如：企划实习生（广州）"
@@ -190,24 +202,32 @@ export default function Tab2() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs w-14 text-right text-gray-500">SAP代码</label>
+            <label htmlFor="form-sap" className="text-xs w-14 text-right text-gray-500">
+              SAP代码
+            </label>
             <input
+              id="form-sap"
               className="flex-1 px-2 py-1 rounded text-sm border"
               value={form.sap}
               onChange={(e) => setForm((f) => ({ ...f, sap: e.target.value }))}
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs w-14 text-right text-gray-500">备注</label>
+            <label htmlFor="form-note" className="text-xs w-14 text-right text-gray-500">
+              备注
+            </label>
             <input
+              id="form-note"
               className="flex-1 px-2 py-1 rounded text-sm border"
               value={form.note}
               onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs w-14 text-right text-gray-500">是否发布</label>
-            <div className="flex gap-3">
+            <span className="text-xs w-14 text-right text-gray-500" aria-hidden="true">
+              是否发布
+            </span>
+            <div className="flex gap-3" role="radiogroup" aria-label="是否发布">
               {['是', '否'].map((v) => (
                 <label key={v} className="flex items-center gap-1 cursor-pointer text-xs">
                   <input

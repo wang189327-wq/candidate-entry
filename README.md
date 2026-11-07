@@ -56,21 +56,31 @@
 | 模块 | 能力 |
 |---|---|
 | **Tab1 信息识别** | 粘贴聊天记录，正则解析姓名 / 手机号 / 微信号 / 年龄 / 门店；门店名 → SAP 代码自动查表回填；一键写入目标系统 |
-| **Tab2 SAP 代码管理** | 门店 ↔ 岗位 ↔ SAP 映射的树形管理：模糊搜索、增删改、双击编辑、发布状态统计、列宽记忆 |
-| **Tab3 图片库** | 店长联系方式截图等业务图片：预览 / 全屏 / 复制到剪贴板（直接粘进微信）/ 上传飞书附件 |
+| **Tab2 SAP 代码管理** | 门店 ↔ 岗位 ↔ SAP 映射的表格化管理：按城市 / 发布状态筛选、增删改、双击行进入编辑、发布数量统计 |
+| **Tab3 图片库** | 门店素材统一存储：图片预览 / 全屏查看 / 复制图片路径与链接、上传到云端存储、按 SAP 代码归类 |
 | **Tab4 登录账号** | 系统账号管理：新增/编辑用户与密码重置（管理员可见全部账号，普通用户仅见自己）；同时可维护飞书应用凭证（App ID / App Secret / App Token）供飞书写入目标使用 |
 | **Tab5 接入配置** | **写入目标可插拔**：飞书多维表格 / 任意 Webhook（钉钉、企业微信、自建 API）/ Supabase 云端 / 本地 CSV 导出，一键切换 + 连通性测试 |
-| **系统层** | 登录认证（本地 bcrypt / Supabase 云端）、用户管理与密码重置、多实例保护、界面布局持久化、页签切换状态保留 |
+| **系统层** | 登录认证（bcrypt 校验）、用户管理与密码重置、页签切换状态保留 |
 
 ### 📸 界面一览
 
-| Tab1 信息识别 | Tab2 SAP 代码管理 |
-|---|---|
-| ![Tab1](docs/images/tab1-blank.png) | ![Tab2](docs/images/tab2-sap.png) |
+**空态**（初始界面）与**工作态**（已识别 / 已选中）各一版，便于对照了解交互前后的状态变化。
 
-| Tab3 图片库 | Tab4 登录账号 | Tab5 接入配置 |
+| 空态 · Tab1 信息识别 | 空态 · Tab2 SAP 代码管理 |
+|---|---|
+| ![Tab1 空态](docs/images/tab1-empty.png) | ![Tab2 空态](docs/images/tab2-empty.png) |
+
+| 空态 · Tab3 图片库 | 空态 · Tab4 登录账号 | 空态 · Tab5 接入配置 |
 |---|---|---|
-| ![Tab3](docs/images/tab3-images.png) | ![Tab4](docs/images/tab4-accounts.png) | ![Tab5](docs/images/tab5-integration.png) |
+| ![Tab3 空态](docs/images/tab3-empty.png) | ![Tab4 空态](docs/images/tab4-empty.png) | ![Tab5 空态](docs/images/tab5-empty.png) |
+
+| 工作态 · Tab1 信息识别 | 工作态 · Tab2 SAP 代码管理 |
+|---|---|
+| ![Tab1 工作态](docs/images/tab1-filled.png) | ![Tab2 工作态](docs/images/tab2-filled.png) |
+
+| 工作态 · Tab3 图片库 | 工作态 · Tab4 登录账号 | 工作态 · Tab5 接入配置 |
+|---|---|---|
+| ![Tab3 工作态](docs/images/tab3-filled.png) | ![Tab4 工作态](docs/images/tab4-filled.png) | ![Tab5 工作态](docs/images/tab5-filled.png) |
 
 ### 🔌 写入目标可插拔（不必用飞书）
 
@@ -125,10 +135,11 @@ flowchart LR
 
 | 环节 | 工具 | 覆盖范围 |
 |---|---|---|
-| 单元测试 | Vitest | 64 项：解析层 27 · 适配器契约 17 · CSV 转义 8 · HTTP 封装 12 |
-| 代码规范 | ESLint | react / react-hooks 插件，当前**零警告** |
+| 单元测试 | Vitest | 80 项：解析层 40 · 适配器契约 17 · HTTP 封装 12 · CSV 转义 11 |
+| 代码规范 | ESLint | react / react-hooks / jsx-a11y 插件，当前**零错误零警告** |
 | 格式统一 | Prettier | 全量 JS/JSX/JSON，`format:check` 纳入 CI |
-| 密钥扫描 | 自写脚本 | 41 个文件全量扫描，命中即阻断 |
+| 密钥扫描 | 自写脚本 | 73 个文件全量扫描，命中即阻断 |
+| 依赖审计 | npm audit | 仅审计生产依赖，高危漏洞阻断 CI |
 | 桌面版语法 | Python AST | 单文件 2469 行全量解析 |
 
 ```bash
@@ -149,7 +160,7 @@ npm run dev          # http://localhost:5173
 npm run verify       # lint + format:check + test + build
 ```
 
-云端功能（登录 / SAP 云同步 / 云端写入）需自建 Supabase 项目，参考 [`.env.example`](./.env.example)。未配置 Supabase 时，Tab1~Tab4 的核心功能仍可完整使用（localStorage 持久化），写入目标可在「接入配置」中切换到飞书 / Webhook / 本地导出。
+云端功能（登录 / SAP 云同步 / 云端写入）默认连向内置的公开演示项目。想接自己的 Supabase，复制 [`.env.example`](./.env.example) 为 `.env.local` 并填入 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`（前端只支持 anon key，务必配好 RLS）。桌面版的 `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` 需以真实环境变量注入，`.env.local` 对 Python 无效。
 
 ### 桌面版
 
@@ -184,10 +195,11 @@ python 求职者信息录入.py    # 本地模式内置账号 admin / Aa@123456
 
 ## 🔒 隐私与安全
 
-- 所有密钥已从代码中移除，改用环境变量 / 配置文件注入（见 `.env.example`）
+- **敏感密钥**（service_role、飞书 App Secret、数据库密码）均不进入仓库，改用环境变量 / 配置文件注入（见 `.env.example`）；源码中仅保留 Supabase **anon key**（设计上可公开，仅受 RLS 保护），且已支持用 `VITE_SUPABASE_*` 覆盖
 - 门店联系方式截图等真实业务素材**不随仓库分发**
 - `sap_config.json`、`feishu_accounts.json` 均为示例数据，生产数据在团队内网环境
 - 线上演示用的 Supabase 库同样只保留示例数据（SAP 代码 1 条），完整的 400+ 条门店岗位代码库在生产环境
+- 在线演示站的权限判定在前端完成，便于体验；**请勿在演示站输入真实候选人信息或真实业务凭证**，生产部署前的加固清单见 [SECURITY.md](./SECURITY.md)
 
 ## 📄 License
 
