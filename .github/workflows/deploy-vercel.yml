@@ -14,15 +14,12 @@ jobs:
     name: 构建并发布到 Vercel
     runs-on: ubuntu-latest
 
-    # 注意：GitHub 不允许在 if 条件中直接引用 secrets（会报 Unrecognized named-value），
-    # 官方做法是先转成 job 级 env，再用 env 判断是否执行。
+    # 注意：jobs.<job_id>.if 只支持 github / needs / vars / inputs 上下文，
+    # env 与 secrets 都不可用，因此「是否配置了 Token」必须在步骤级用 env 判断。
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-    # 未配置 Vercel 凭据时跳过，不阻塞主分支与 Pages 部署
-    if: ${{ github.event_name == 'workflow_dispatch' || env.VERCEL_TOKEN != '' }}
 
     steps:
       - name: 检出代码
@@ -40,7 +37,9 @@ jobs:
       - name: 构建
         run: npm run build
 
+      # 未配置 Vercel 凭据时跳过发布，不影响 Pages 部署与主分支
       - name: 发布到 Vercel
+        if: ${{ env.VERCEL_TOKEN != '' }}
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ env.VERCEL_TOKEN }}
@@ -48,3 +47,7 @@ jobs:
           vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
           working-directory: ./
+
+      - name: 提示未配置 Vercel 凭据
+        if: ${{ env.VERCEL_TOKEN == '' }}
+        run: echo "::notice::未配置 VERCEL_TOKEN，跳过 Vercel 部署。配置方式见 README「部署」章节。"
