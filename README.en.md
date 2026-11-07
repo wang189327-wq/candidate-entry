@@ -34,7 +34,7 @@ The desktop version was used in production by the recruiting team; the web versi
 
 ![Demo walkthrough](docs/images/demo.gif)
 
-<sub>Paste → parse → switch write target → write, in 7 steps. Switching the target in *Integrations* keeps whatever you already filled in on Tab 1.</sub>
+<sub>Paste → parse → switch write target → write, in 9 steps. Switching the target in *Integrations* keeps whatever you already filled in on Tab 1.</sub>
 
 ## 🚀 Evolution
 
@@ -56,7 +56,7 @@ Not a one-shot portfolio piece — it went through 6 iterations driven by real b
 | **Tab1 Parsing** | Paste chat log → regex-extract name / phone / WeChat / age / store; store name → SAP code auto-lookup; write to the configured target |
 | **Tab2 SAP Codes** | Tree-based management of store ↔ position ↔ SAP mappings: fuzzy search, CRUD, inline edit, publish stats, column-width memory |
 | **Tab3 Image Library** | Business screenshots (store manager contacts): preview / fullscreen / copy-to-clipboard / upload as Feishu attachment |
-| **Tab4 Feishu Accounts** | Multi-app credential management, active-account switching, tenant access token connectivity test |
+| **Tab4 Accounts** | System account management: create/edit users and reset passwords (admins see all, regular users only their own); also holds Feishu app credentials (App ID / App Secret / App Token) used by the Feishu write target |
 | **Tab5 Integrations** | **Pluggable write target**: Feishu Base / any Webhook (DingTalk, WeCom, custom API) / Supabase / local CSV export — switch + test connectivity in one click |
 | **System** | Auth (local bcrypt / Supabase), user management, single-instance guard, layout persistence, tab state preserved across switches |
 
@@ -66,7 +66,7 @@ Not a one-shot portfolio piece — it went through 6 iterations driven by real b
 |---|---|
 | ![Tab1](docs/images/tab1-blank.png) | ![Tab2](docs/images/tab2-sap.png) |
 
-| Tab3 Image Library | Tab4 Feishu Accounts | Tab5 Integrations |
+| Tab3 Image Library | Tab4 Accounts | Tab5 Integrations |
 |---|---|---|
 | ![Tab3](docs/images/tab3-images.png) | ![Tab4](docs/images/tab4-accounts.png) | ![Tab5](docs/images/tab5-integration.png) |
 
@@ -164,6 +164,7 @@ See [`desktop/README.md`](./desktop/README.md) to connect your own Feishu app.
 - All secrets removed from source; injected via env vars / config files (`.env.example`)
 - Real business screenshots (store manager contact info) are **not** distributed in this repo
 - `sap_config.json` / `feishu_accounts.json` contain sample data only
+- The public demo Supabase project ships sample data as well (1 SAP code); the full 400+ entry library lives in the production environment
 
 ## 📄 License
 
