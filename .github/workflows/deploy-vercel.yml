@@ -13,8 +13,16 @@ jobs:
   deploy:
     name: 构建并发布到 Vercel
     runs-on: ubuntu-latest
-    # 未配置 Vercel 凭据时跳过，不阻塞 Pages 部署与主分支
-    if: ${{ github.event_name == 'workflow_dispatch' || secrets.VERCEL_TOKEN != '' }}
+
+    # 注意：GitHub 不允许在 if 条件中直接引用 secrets（会报 Unrecognized named-value），
+    # 官方做法是先转成 job 级 env，再用 env 判断是否执行。
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    # 未配置 Vercel 凭据时跳过，不阻塞主分支与 Pages 部署
+    if: ${{ github.event_name == 'workflow_dispatch' || env.VERCEL_TOKEN != '' }}
 
     steps:
       - name: 检出代码
@@ -35,8 +43,8 @@ jobs:
       - name: 发布到 Vercel
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-token: ${{ env.VERCEL_TOKEN }}
+          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
           working-directory: ./
