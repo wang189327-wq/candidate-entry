@@ -152,6 +152,37 @@ ${REAL_CHAT}
     expect(r._phone_block).toBeUndefined()
     expect(r._wechat_block).toBeUndefined()
   })
+
+  // 回归：缺陷 3 —— 手机号/微信号行不得被当成姓名写入数据库
+  describe('残缺记录下的姓名识别', () => {
+    const CASES = [
+      ['只有手机号块', '的手机号：\n138-0011-2233\n复制手机号'],
+      ['只有手机号值行', '138-0011-2233\n复制手机号'],
+      ['手机号块 + 年龄块', '的手机号：\n138-0011-2233\n复制手机号\n年龄：\n30 岁'],
+      ['微信号开头 + 年龄块', 'wxid_zmx2024\n年龄：\n30 岁'],
+      ['只有年龄块', '年龄：\n30 岁'],
+      ['只有沟通职位块', '沟通职位：\n拣货员（广州正佳广场门店）'],
+      ['半角冒号年龄块', 'wxid_x1\n年龄:\n30 岁'],
+      ['同行标签年龄', 'wxid_x1\n年龄：30 岁'],
+      ['同行标签沟通职位', 'wxid_x1\n沟通职位：拣货员（广州正佳广场门店）'],
+      ['纯数字行', '13888\n年龄：\n30 岁'],
+    ]
+
+    CASES.forEach(([label, text]) => {
+      it(`${label}：不产生错误姓名`, () => {
+        const r = parseText(text)
+        if (r) expect(r['姓名']).toBeUndefined()
+      })
+    })
+
+    it('完整记录仍能正确识别姓名', () => {
+      expect(parseText(REAL_CHAT)['姓名']).toBe('张明轩')
+    })
+
+    it('一行到底的写法能从标签前取出姓名', () => {
+      expect(parseText('李明的手机号：13800112233')['姓名']).toBe('李明')
+    })
+  })
 })
 
 describe('lookupSapByStore', () => {
