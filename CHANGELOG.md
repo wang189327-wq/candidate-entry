@@ -23,7 +23,7 @@
 - **云端 Supabase 五张表已清空**：`candidates` / `sap_codes` / `images` / `feishu_accounts` /
   `program_users` 的历史数据（含真实候选人手机号、微信号）全部删除，
   仅保留重建的 `admin` 演示账号以维持 README 中的登录说明可用。
-  清空前快照存于 `本地私有备份目录`。
+  清空前快照存于本地私有备份目录（未纳入仓库）。
 
 ## [2.0.0] - 2026-11-07
 
