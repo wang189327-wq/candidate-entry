@@ -118,7 +118,7 @@ flowchart LR
 | 单元测试 | Vitest | 97 项：解析层 50 · 适配器契约 17 · 接入配置隔离 7 · HTTP 封装 12 · CSV 转义 11 |
 | 代码规范 | ESLint | react / react-hooks / jsx-a11y 插件，当前**零错误零警告** |
 | 格式统一 | Prettier | 全量 JS/JSX/JSON，`format:check` 纳入 CI |
-| 密钥扫描 | 自写脚本 | 77 个文件全量扫描，命中即阻断 |
+| 密钥扫描 | 自写脚本 | 78 个文件全量扫描，命中即阻断 |
 | 依赖审计 | npm audit | 仅审计生产依赖，高危漏洞阻断 CI |
 | 工作流校验 | 自写脚本 | 校验 Actions schema 合法性，配置写错在本地就报错 |
 | 桌面版语法 | Python AST | 单文件 2469 行全量解析 |

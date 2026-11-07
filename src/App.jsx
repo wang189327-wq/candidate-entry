@@ -9,7 +9,16 @@ import bcrypt from 'bcryptjs'
 
 const TAB_COMPONENTS = [Tab1, Tab2, Tab3, Tab4, Tab5]
 const TAB_LABELS = ['信息识别', 'SAP代码管理', '图片库', '登录账号', '接入配置']
-const TAB_VISIBLE_TO_GUEST = [true, false, false, false, false]
+
+// 按角色分配可见页签（白名单，未列出的角色一律按 guest 处理）
+//   admin：全部页签
+//   user ：仅「信息识别」+ 自己的「登录账号」
+//   guest：仅「信息识别」
+const TAB_VISIBLE_BY_ROLE = {
+  admin: [true, true, true, true, true],
+  user: [true, false, false, true, false],
+  guest: [true, false, false, false, false],
+}
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -154,31 +163,14 @@ export default function App() {
     )
   }
 
-  // 游客：只显示 Tab1
-  if (user.role === 'guest') {
-    return (
-      <div className="min-h-screen bg-styleBg flex flex-col">
-        <div className="bg-white border-b border-styleBtn px-6 py-3 flex items-center justify-between shadow-sm">
-          <h1 className="text-lg font-bold text-purple" style={{ fontFamily: 'Microsoft YaHei' }}>
-            门店求职者信息录入
-          </h1>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400">游客模式</span>
-            <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-red-500 underline">
-              退出
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 overflow-auto">
-          <Tab1 />
-        </div>
-      </div>
-    )
-  }
+  // 角色决定可见页签：仅 admin 拿到全部，其余按白名单裁剪（越权面最小化）
+  const role = TAB_VISIBLE_BY_ROLE[user.role] ? user.role : 'guest'
+  const visibleTabs = TAB_VISIBLE_BY_ROLE[role]
+  // 当前页签若不在可见范围内（例如角色降级后），回落到第一个可见页签
+  const safeTab = visibleTabs[activeTab] ? activeTab : visibleTabs.indexOf(true)
 
-  // 管理员：显示所有 Tab
-  // 所有 Tab 一并挂载、仅切换显隐 —— 这样切换页签时组件状态（已识别的字段、
-  // 已填的表单、滚动位置）不会丢失。
+  // 所有可见 Tab 一并挂载、仅切换显隐 —— 切换页签时组件状态（已识别的字段、
+  // 已填的表单、滚动位置）不会丢失；不可见的页签不挂载，避免无谓的数据请求。
   return (
     <div className="min-h-screen bg-styleBg flex flex-col">
       {/* 顶部标题 */}
@@ -187,7 +179,10 @@ export default function App() {
           门店求职者信息录入
         </h1>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">欢迎，{user.username}</span>
+          <span className="text-xs text-gray-400">
+            {role === 'guest' ? '游客模式' : `欢迎，${user.username}`}
+            {role === 'user' && <span className="ml-1 text-gray-300">（普通用户）</span>}
+          </span>
           <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-red-500 underline">
             退出
           </button>
@@ -198,13 +193,13 @@ export default function App() {
       <div className="bg-white border-b border-styleBg2 px-6">
         <div className="flex gap-1">
           {TAB_LABELS.map((label, i) => {
-            if (user.role === 'guest' && !TAB_VISIBLE_TO_GUEST[i]) return null
+            if (!visibleTabs[i]) return null
             return (
               <button
                 key={i}
                 onClick={() => setActiveTab(i)}
                 className={`px-6 py-3 text-sm font-medium transition-all duration-200 border-b-2 ${
-                  activeTab === i
+                  safeTab === i
                     ? 'border-purple text-purple bg-styleBg bg-opacity-40'
                     : 'border-transparent text-gray-500 hover:text-purple hover:bg-styleBg hover:bg-opacity-30'
                 }`}
@@ -218,11 +213,13 @@ export default function App() {
 
       {/* Tab 内容 */}
       <div className="flex-1 overflow-auto">
-        {TAB_COMPONENTS.map((Comp, i) => (
-          <div key={i} className={activeTab === i ? 'block' : 'hidden'}>
-            <Comp />
-          </div>
-        ))}
+        {TAB_COMPONENTS.map((Comp, i) =>
+          visibleTabs[i] ? (
+            <div key={i} className={safeTab === i ? 'block' : 'hidden'}>
+              <Comp />
+            </div>
+          ) : null
+        )}
       </div>
     </div>
   )

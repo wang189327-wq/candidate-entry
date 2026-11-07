@@ -107,7 +107,8 @@ export default function Tab4() {
         p_app_id_key: f.app_id_key,
         p_app_secret_key: f.app_secret_key,
         p_app_token_key: f.app_token_key,
-        p_role: 'guest',
+        // 数据库侧 program_users_role_check 只允许 admin / user，普通账号统一为 user
+        p_role: 'user',
       })
       if (error) throw error
 
