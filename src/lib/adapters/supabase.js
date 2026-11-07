@@ -15,7 +15,7 @@ const COLUMN_MAP = {
 function toRow(record) {
   const obj = recordToObject(record)
   const row = {}
-  Object.keys(obj).forEach(k => {
+  Object.keys(obj).forEach((k) => {
     const col = COLUMN_MAP[k]
     if (col) row[col] = obj[k]
   })

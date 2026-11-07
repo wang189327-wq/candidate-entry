@@ -14,7 +14,10 @@ function looksLikeContact(line) {
 
 export function parseText(text) {
   if (!text || !String(text).trim()) return null
-  const lines = String(text).split('\n').map(l => l.trim()).filter(Boolean)
+  const lines = String(text)
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
 
   const data = {}
   // 手机号 / 微信号：按3行块解析

@@ -16,16 +16,18 @@ export default function Tab5() {
     // 切换适配器时载入该适配器已保存的参数，缺省值取 fields.default
     const savedCfg = loadIntegration().config
     const defaults = {}
-    adapter.fields.forEach(f => {
+    getAdapter(adapterId).fields.forEach((f) => {
       if (f.default !== undefined) defaults[f.key] = f.default
     })
     setConfig({ ...defaults, ...savedCfg })
     setResult(null)
     setSaved(false)
+    // 仅在切换目标时重新载入配置；adapter 对象每次渲染都会重建，不宜作为依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adapterId])
 
   function handleChange(key, value) {
-    setConfig(c => ({ ...c, [key]: value }))
+    setConfig((c) => ({ ...c, [key]: value }))
     setSaved(false)
     setResult(null)
   }
@@ -52,14 +54,12 @@ export default function Tab5() {
           <span className="text-sm font-bold text-purple">写入目标系统</span>
         </div>
         <div className="flex-1 overflow-auto p-2">
-          {ADAPTERS.map(a => (
+          {ADAPTERS.map((a) => (
             <div
               key={a.id}
               onClick={() => setAdapterId(a.id)}
               className={`p-3 rounded mb-1 cursor-pointer border transition ${
-                adapterId === a.id
-                  ? 'border-purple bg-indigo-50'
-                  : 'border-transparent hover:bg-gray-50'
+                adapterId === a.id ? 'border-purple bg-indigo-50' : 'border-transparent hover:bg-gray-50'
               }`}
             >
               <div className="text-sm font-medium text-gray-800">
@@ -91,24 +91,26 @@ export default function Tab5() {
               </div>
             </div>
           ) : (
-            adapter.fields.map(f => (
+            adapter.fields.map((f) => (
               <div key={f.key}>
                 <label className="block text-sm text-gray-600 mb-1">{f.label}</label>
                 {f.type === 'select' ? (
                   <select
                     value={config[f.key] ?? f.default ?? ''}
-                    onChange={e => handleChange(f.key, e.target.value)}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
                   >
-                    {f.options.map(o => (
-                      <option key={o.id} value={o.id}>{o.label}</option>
+                    {f.options.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
                     ))}
                   </select>
                 ) : (
                   <input
                     type={f.type === 'password' ? 'password' : 'text'}
                     value={config[f.key] ?? ''}
-                    onChange={e => handleChange(f.key, e.target.value)}
+                    onChange={(e) => handleChange(f.key, e.target.value)}
                     placeholder={f.placeholder || ''}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
                   />
@@ -119,8 +121,11 @@ export default function Tab5() {
           )}
 
           {result && (
-            <div className={`text-sm rounded p-3 ${result.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-              {result.ok ? '✓ ' : '✗ '}{result.message}
+            <div
+              className={`text-sm rounded p-3 ${result.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}
+            >
+              {result.ok ? '✓ ' : '✗ '}
+              {result.message}
             </div>
           )}
         </div>

@@ -1,11 +1,20 @@
 {
-  "name": "jobseeker-portfolio",
-  "version": "1.0.0",
+  "name": "candidate-entry",
+  "version": "2.1.0",
+  "description": "求职者信息录入工具 —— 聊天记录解析、SAP 岗位匹配、一键写入可插拔目标系统",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix",
+    "format": "prettier --write \"src/**/*.{js,jsx}\" \"*.js\" \"*.json\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx}\" \"*.js\" \"*.json\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "verify": "npm run lint && npm run format:check && npm run test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

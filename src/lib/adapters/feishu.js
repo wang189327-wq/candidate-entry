@@ -6,7 +6,10 @@ import { postJson } from './http'
 const API_BASE = 'https://open.feishu.cn/open-apis'
 
 async function getTenantToken(appId, appSecret) {
-  const res = await postJson(`${API_BASE}/auth/v3/tenant_access_token/internal`, { app_id: appId, app_secret: appSecret })
+  const res = await postJson(`${API_BASE}/auth/v3/tenant_access_token/internal`, {
+    app_id: appId,
+    app_secret: appSecret,
+  })
   if (!res.ok) return { ok: false, message: res.error || `HTTP ${res.status}` }
   if (res.data?.code !== 0) return { ok: false, message: res.data?.msg || '获取 tenant_access_token 失败' }
   return { ok: true, token: res.data.tenant_access_token }

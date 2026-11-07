@@ -21,12 +21,7 @@ export const INITIAL_ACCOUNTS = [
 ]
 
 // 虚拟门店名称列表（用于示例聊天记录）
-export const SAMPLE_STORES = [
-  '广州正佳广场店',
-  '深圳万象城店',
-  '成都春熙路店',
-  '上海环球港店',
-]
+export const SAMPLE_STORES = ['广州正佳广场店', '深圳万象城店', '成都春熙路店', '上海环球港店']
 
 // 随机挑一个门店
 export function randomStore() {

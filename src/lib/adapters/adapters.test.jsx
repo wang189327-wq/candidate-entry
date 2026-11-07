@@ -21,15 +21,7 @@ const RECORD = {
 describe('RECORD_FIELDS', () => {
   it('包含全部 7 个标准字段', () => {
     expect(RECORD_FIELDS).toHaveLength(7)
-    expect(RECORD_FIELDS).toEqual([
-      '姓名',
-      '年龄',
-      '性别',
-      '联系方式',
-      'SAP代码',
-      '意向岗位',
-      '门店名称',
-    ])
+    expect(RECORD_FIELDS).toEqual(['姓名', '年龄', '性别', '联系方式', 'SAP代码', '意向岗位', '门店名称'])
   })
 })
 
@@ -93,17 +85,17 @@ describe('适配器注册表', () => {
   })
 
   it('适配器 id 唯一', () => {
-    const ids = ADAPTERS.map(a => a.id)
+    const ids = ADAPTERS.map((a) => a.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
 
   it('默认目标是 supabase 且存在于注册表中', () => {
     expect(DEFAULT_ADAPTER_ID).toBe('supabase')
-    expect(ADAPTERS.some(a => a.id === DEFAULT_ADAPTER_ID)).toBe(true)
+    expect(ADAPTERS.some((a) => a.id === DEFAULT_ADAPTER_ID)).toBe(true)
   })
 
   it('包含预期的四种写入目标', () => {
-    const ids = ADAPTERS.map(a => a.id)
+    const ids = ADAPTERS.map((a) => a.id)
     expect(ids).toContain('supabase')
     expect(ids).toContain('feishu')
     expect(ids).toContain('webhook')

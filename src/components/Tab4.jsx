@@ -35,7 +35,9 @@ export default function Tab4() {
   async function loadAccounts() {
     setLoading(true)
     const { data, error } = await sb.from('feishu_accounts').select('*').order('created_at', { ascending: false })
-    if (error) { alert('读取失败：' + error.message) }
+    if (error) {
+      alert('读取失败：' + error.message)
+    }
     if (data) setAccounts(data)
     setLoading(false)
   }
@@ -61,9 +63,18 @@ export default function Tab4() {
 
   // 保存前检查（admin编辑admin账号需验证）
   function handleSave() {
-    if (!form.alias) { alert('用户名不能为空'); return }
-    if (!form.app_id_key) { alert('App ID 不能为空'); return }
-    if (!form.app_secret_key) { alert('App Secret 不能为空'); return }
+    if (!form.alias) {
+      alert('用户名不能为空')
+      return
+    }
+    if (!form.app_id_key) {
+      alert('App ID 不能为空')
+      return
+    }
+    if (!form.app_secret_key) {
+      alert('App Secret 不能为空')
+      return
+    }
 
     const isNew = selectedIdx === null
     const editingAccount = !isNew ? accounts[selectedIdx] : null
@@ -84,13 +95,19 @@ export default function Tab4() {
     try {
       if (isNew) {
         // 新增：写入 feishu_accounts + program_users
-        if (!f.password) { alert('新增账号需要设置密码'); return }
-        const { data: ins } = await sb.from('feishu_accounts').insert({
-          alias: f.alias,
-          app_id_key: f.app_id_key,
-          app_secret_key: f.app_secret_key,
-          app_token_key: f.app_token_key,
-        }).select()
+        if (!f.password) {
+          alert('新增账号需要设置密码')
+          return
+        }
+        const { data: ins } = await sb
+          .from('feishu_accounts')
+          .insert({
+            alias: f.alias,
+            app_id_key: f.app_id_key,
+            app_secret_key: f.app_secret_key,
+            app_token_key: f.app_token_key,
+          })
+          .select()
         if (ins?.[0]) {
           const hash = await bcrypt.hash(f.password, 10)
           await sb.from('program_users').insert({
@@ -102,12 +119,15 @@ export default function Tab4() {
       } else {
         // 编辑：更新 feishu_accounts
         const acc = accounts[selectedIdx]
-        await sb.from('feishu_accounts').update({
-          alias: f.alias,
-          app_id_key: f.app_id_key,
-          app_secret_key: f.app_secret_key,
-          app_token_key: f.app_token_key,
-        }).eq('id', acc.id)
+        await sb
+          .from('feishu_accounts')
+          .update({
+            alias: f.alias,
+            app_id_key: f.app_id_key,
+            app_secret_key: f.app_secret_key,
+            app_token_key: f.app_token_key,
+          })
+          .eq('id', acc.id)
 
         // 如果改了用户名，同步更新 program_users
         if (f.alias !== acc.alias) {
@@ -141,7 +161,10 @@ export default function Tab4() {
 
   // 删除前验证
   function handleDelete() {
-    if (selectedIdx === null) { alert('请先选中要删除的账号'); return }
+    if (selectedIdx === null) {
+      alert('请先选中要删除的账号')
+      return
+    }
     const acc = accounts[selectedIdx]
     if (acc.alias === ADMIN_USERNAME) {
       alert('管理员账号不可删除')
@@ -180,19 +203,20 @@ export default function Tab4() {
   }
 
   // 普通用户看到的列表（只有自己）
-  const visibleAccounts = isAdmin ? accounts : accounts.filter(a => a.alias === currentUser.username)
+  const visibleAccounts = isAdmin ? accounts : accounts.filter((a) => a.alias === currentUser.username)
 
   return (
     <div className="flex gap-4 p-4 h-full" style={{ minHeight: 'calc(100vh - 110px)' }}>
       {/* 左侧：账号列表 */}
       <div className="w-72 bg-white rounded border border-gray-200 flex flex-col">
         <div className="px-4 py-2 flex items-center justify-between border-b border-gray-100">
-          <span className="text-sm font-bold text-purple">
-            {isAdmin ? '登录账号' : '我的账号'}
-          </span>
+          <span className="text-sm font-bold text-purple">{isAdmin ? '登录账号' : '我的账号'}</span>
           {isAdmin && (
-            <button onClick={handleAdd}
-              className="text-xs px-3 py-1 rounded text-white" style={{ backgroundColor: '#A8D4A8' }}>
+            <button
+              onClick={handleAdd}
+              className="text-xs px-3 py-1 rounded text-white"
+              style={{ backgroundColor: '#A8D4A8' }}
+            >
               + 新增账号
             </button>
           )}
@@ -202,43 +226,49 @@ export default function Tab4() {
             <div className="p-4 text-center text-gray-400 text-sm">加载中…</div>
           ) : visibleAccounts.length === 0 ? (
             <div className="p-4 text-center text-gray-400 text-sm">暂无账号</div>
-          ) : visibleAccounts.map((acc, idx) => {
-            const realIdx = accounts.indexOf(acc)
-            return (
-              <button key={acc.id}
-                onClick={() => handleSelect(realIdx)}
-                className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 transition ${
-                  selectedIdx === realIdx ? 'bg-purple bg-opacity-10 text-purple' : 'hover:bg-gray-50'
-                }`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium truncate">{acc.alias || '(无备注)'}</span>
-                  {acc.alias === ADMIN_USERNAME && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 ml-1 shrink-0">管理员</span>
-                  )}
-                </div>
-                <div className="text-xs text-gray-400 truncate mt-0.5">{acc.app_id_key}</div>
-              </button>
-            )
-          })}
+          ) : (
+            visibleAccounts.map((acc, idx) => {
+              const realIdx = accounts.indexOf(acc)
+              return (
+                <button
+                  key={acc.id}
+                  onClick={() => handleSelect(realIdx)}
+                  className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 transition ${
+                    selectedIdx === realIdx ? 'bg-purple bg-opacity-10 text-purple' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium truncate">{acc.alias || '(无备注)'}</span>
+                    {acc.alias === ADMIN_USERNAME && (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 ml-1 shrink-0">
+                        管理员
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 truncate mt-0.5">{acc.app_id_key}</div>
+                </button>
+              )
+            })
+          )}
         </div>
       </div>
 
       {/* 右侧：编辑区 */}
       <div className="flex-1 bg-white rounded border border-gray-200 flex flex-col">
         <div className="px-4 py-2 border-b border-gray-100">
-          <span className="text-sm font-bold text-purple">
-            {selectedIdx !== null ? '编辑账号' : '新增账号'}
-          </span>
+          <span className="text-sm font-bold text-purple">{selectedIdx !== null ? '编辑账号' : '新增账号'}</span>
         </div>
         <div className="flex-1 overflow-auto p-6">
           <div className="space-y-4">
             {/* 用户名 */}
             <div>
               <label className="block text-sm text-gray-600 mb-1">用户名</label>
-              <input value={form.alias}
-                onChange={e => setForm(p => ({ ...p, alias: e.target.value }))}
+              <input
+                value={form.alias}
+                onChange={(e) => setForm((p) => ({ ...p, alias: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
-                placeholder="登录用户名" />
+                placeholder="登录用户名"
+              />
             </div>
             {/* 账号密码 */}
             <div>
@@ -246,12 +276,17 @@ export default function Tab4() {
                 账号密码{selectedIdx !== null ? '（留空不修改）' : ''}
               </label>
               <div className="relative">
-                <input type={showPwd ? 'text' : 'password'} value={form.password}
-                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple pr-16"
-                  placeholder={selectedIdx !== null ? '留空则保持不变' : '必填'} />
-                <button onClick={() => setShowPwd(s => !s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">
+                  placeholder={selectedIdx !== null ? '留空则保持不变' : '必填'}
+                />
+                <button
+                  onClick={() => setShowPwd((s) => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+                >
                   {showPwd ? '隐藏' : '显示'}
                 </button>
               </div>
@@ -259,21 +294,28 @@ export default function Tab4() {
             {/* App ID */}
             <div>
               <label className="block text-sm text-gray-600 mb-1">App ID</label>
-              <input value={form.app_id_key}
-                onChange={e => setForm(p => ({ ...p, app_id_key: e.target.value }))}
+              <input
+                value={form.app_id_key}
+                onChange={(e) => setForm((p) => ({ ...p, app_id_key: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
-                placeholder="ltaa0xxxxxx" />
+                placeholder="ltaa0xxxxxx"
+              />
             </div>
             {/* App Secret */}
             <div>
               <label className="block text-sm text-gray-600 mb-1">App Secret</label>
               <div className="relative">
-                <input type={showSecret ? 'text' : 'password'} value={form.app_secret_key}
-                  onChange={e => setForm(p => ({ ...p, app_secret_key: e.target.value }))}
+                <input
+                  type={showSecret ? 'text' : 'password'}
+                  value={form.app_secret_key}
+                  onChange={(e) => setForm((p) => ({ ...p, app_secret_key: e.target.value }))}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple pr-16"
-                  placeholder="必填" />
-                <button onClick={() => setShowSecret(s => !s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">
+                  placeholder="必填"
+                />
+                <button
+                  onClick={() => setShowSecret((s) => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+                >
                   {showSecret ? '隐藏' : '显示'}
                 </button>
               </div>
@@ -281,26 +323,33 @@ export default function Tab4() {
             {/* App Token */}
             <div>
               <label className="block text-sm text-gray-600 mb-1">App Token</label>
-              <input value={form.app_token_key}
-                onChange={e => setForm(p => ({ ...p, app_token_key: e.target.value }))}
+              <input
+                value={form.app_token_key}
+                onChange={(e) => setForm((p) => ({ ...p, app_token_key: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple"
-                placeholder="可选" />
+                placeholder="可选"
+              />
             </div>
           </div>
         </div>
         {/* 底部按钮 */}
         <div className="px-4 py-3 border-t border-gray-100 flex gap-2">
-          <button onClick={handleSave}
-            className="px-6 py-2 rounded text-sm text-white" style={{ backgroundColor: '#A8D4A8' }}>
+          <button
+            onClick={handleSave}
+            className="px-6 py-2 rounded text-sm text-white"
+            style={{ backgroundColor: '#A8D4A8' }}
+          >
             保存
           </button>
           {isAdmin && (
             <>
-              <button onClick={handleDelete}
-                className="px-6 py-2 rounded text-sm text-white" style={{ backgroundColor: '#FFCCCC', color: '#c00' }}>
+              <button
+                onClick={handleDelete}
+                className="px-6 py-2 rounded text-sm text-white"
+                style={{ backgroundColor: '#FFCCCC', color: '#c00' }}
+              >
                 删除
               </button>
-
             </>
           )}
         </div>
@@ -314,17 +363,29 @@ export default function Tab4() {
             <p className="text-xs text-gray-500 mb-4">
               修改 / 保存管理员账号「{pendingForm?.alias}」需要输入管理员验证码
             </p>
-            <input type="password" value={verifyCode}
-              onChange={e => setVerifyCode(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleVerifySubmit()}
+            <input
+              type="password"
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleVerifySubmit()}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:border-purple"
-              placeholder="输入验证码：118814" autoFocus />
+              placeholder="输入验证码：118814"
+              autoFocus
+            />
             <div className="flex gap-2">
-              <button onClick={handleVerifySubmit}
+              <button
+                onClick={handleVerifySubmit}
                 className="flex-1 py-2 rounded text-sm text-white font-medium"
-                style={{ backgroundColor: '#A8D4A8' }}>确认</button>
-              <button onClick={() => setVerifyOpen(false)}
-                className="flex-1 py-2 rounded text-sm border border-gray-300 text-gray-600 hover:bg-gray-50">取消</button>
+                style={{ backgroundColor: '#A8D4A8' }}
+              >
+                确认
+              </button>
+              <button
+                onClick={() => setVerifyOpen(false)}
+                className="flex-1 py-2 rounded text-sm border border-gray-300 text-gray-600 hover:bg-gray-50"
+              >
+                取消
+              </button>
             </div>
           </div>
         </div>

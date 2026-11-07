@@ -14,7 +14,7 @@ export const DEFAULT_ADAPTER_ID = 'supabase'
 const STORAGE_KEY = 'integration_config'
 
 export function getAdapter(id) {
-  return ADAPTERS.find(a => a.id === id) || ADAPTERS.find(a => a.id === DEFAULT_ADAPTER_ID)
+  return ADAPTERS.find((a) => a.id === id) || ADAPTERS.find((a) => a.id === DEFAULT_ADAPTER_ID)
 }
 
 // 读取当前生效的接入配置（适配器 id + 该适配器的参数）
@@ -64,9 +64,13 @@ export async function writeCandidate(record) {
 // 写入按钮上的文案：随目标系统变化
 export function writeButtonLabel(adapterId) {
   switch (adapterId) {
-    case 'feishu': return '写入飞书'
-    case 'webhook': return '发送到接口'
-    case 'local': return '导出文件'
-    default: return '录入云端'
+    case 'feishu':
+      return '写入飞书'
+    case 'webhook':
+      return '发送到接口'
+    case 'local':
+      return '导出文件'
+    default:
+      return '录入云端'
   }
 }

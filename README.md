@@ -121,6 +121,22 @@ flowchart LR
 
 每次 `push` 到 `main` 会同时触发两条链路：GitHub Actions 做构建校验与密钥扫描，通过后发布 Pages；Vercel 侧同步生成生产部署。
 
+### 🧪 质量保障
+
+| 环节 | 工具 | 覆盖范围 |
+|---|---|---|
+| 单元测试 | Vitest | 64 项：解析层 27 · 适配器契约 17 · CSV 转义 8 · HTTP 封装 12 |
+| 代码规范 | ESLint | react / react-hooks 插件，当前**零警告** |
+| 格式统一 | Prettier | 全量 JS/JSX/JSON，`format:check` 纳入 CI |
+| 密钥扫描 | 自写脚本 | 41 个文件全量扫描，命中即阻断 |
+| 桌面版语法 | Python AST | 单文件 2459 行全量解析 |
+
+```bash
+npm run verify    # 一键跑完 lint + format:check + test + build
+```
+
+CI（`.github/workflows/ci.yml`）在 push 与 PR 时依次执行上述全部检查，任一失败即阻断合并。
+
 ## 🛠️ 快速开始
 
 ### Web 版
@@ -130,6 +146,7 @@ git clone https://github.com/wang189327-wq/candidate-entry.git
 cd candidate-entry
 npm install
 npm run dev          # http://localhost:5173
+npm run verify       # lint + format:check + test + build
 ```
 
 云端功能（登录 / SAP 云同步 / 云端写入）需自建 Supabase 项目，参考 [`.env.example`](./.env.example)。未配置 Supabase 时，Tab1~Tab4 的核心功能仍可完整使用（localStorage 持久化），写入目标可在「接入配置」中切换到飞书 / Webhook / 本地导出。

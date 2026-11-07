@@ -119,6 +119,22 @@ Two public entry points, both auto-deployed from the `main` branch and kept in s
 
 Every push to `main` triggers both pipelines: GitHub Actions runs the build check and secret scan, then publishes Pages; Vercel produces the production deployment in parallel.
 
+### 🧪 Quality Gates
+
+| Stage | Tool | Coverage |
+|---|---|---|
+| Unit tests | Vitest | 64 tests: parser 27 · adapter contract 17 · CSV escaping 8 · HTTP wrapper 12 |
+| Lint | ESLint | react / react-hooks plugins, currently **zero warnings** |
+| Formatting | Prettier | all JS/JSX/JSON, `format:check` runs in CI |
+| Secret scan | custom script | scans all 41 tracked files, blocks on any hit |
+| Desktop syntax | Python AST | full parse of the 2459-line single file |
+
+```bash
+npm run verify    # lint + format:check + test + build in one go
+```
+
+CI (`.github/workflows/ci.yml`) runs every check above on push and pull requests; any failure blocks the merge.
+
 ## 🛠️ Getting Started
 
 ### Web
@@ -128,6 +144,7 @@ git clone https://github.com/wang189327-wq/candidate-entry.git
 cd candidate-entry
 npm install
 npm run dev          # http://localhost:5173
+npm run verify       # lint + format:check + test + build
 ```
 
 Cloud features (login / SAP sync / cloud writes) require your own Supabase project — see [`.env.example`](./.env.example). Without Supabase, Tab1~Tab4 remain fully functional via localStorage, and the write target can be switched to Feishu / Webhook / local export in the "Integration" tab.

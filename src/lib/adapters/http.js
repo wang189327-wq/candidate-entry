@@ -25,7 +25,11 @@ export async function postJson(url, body, options = {}) {
     })
     const text = await res.text()
     let data = null
-    try { data = JSON.parse(text) } catch { /* 非 JSON 响应 */ }
+    try {
+      data = JSON.parse(text)
+    } catch {
+      /* 非 JSON 响应 */
+    }
     return { ok: res.ok, status: res.status, data, text, opaque: false }
   } catch (err) {
     // 疑似跨域拦截，改用简单请求再试一次

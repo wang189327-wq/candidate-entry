@@ -8,7 +8,7 @@ export function toCSV(records) {
     const s = String(v ?? '')
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
-  const rows = records.map(r => RECORD_FIELDS.map(f => escape(recordToObject(r)[f])).join(','))
+  const rows = records.map((r) => RECORD_FIELDS.map((f) => escape(recordToObject(r)[f])).join(','))
   return [header, ...rows].join('\n')
 }
 
@@ -30,8 +30,13 @@ export const localAdapter = {
   desc: '把识别结果下载为 JSON / CSV，不需要任何第三方服务，适合数据不出内网的场景。',
   fields: [
     {
-      key: 'format', label: '导出格式', type: 'select',
-      options: [{ id: 'csv', label: 'CSV（Excel 可直接打开）' }, { id: 'json', label: 'JSON' }],
+      key: 'format',
+      label: '导出格式',
+      type: 'select',
+      options: [
+        { id: 'csv', label: 'CSV（Excel 可直接打开）' },
+        { id: 'json', label: 'JSON' },
+      ],
       default: 'csv',
     },
   ],

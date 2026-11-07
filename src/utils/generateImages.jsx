@@ -157,14 +157,7 @@ const PHONE_NUMBERS = [
   '152-5566-7788',
   '153-9900-1122',
 ]
-const STORE_NAMES = [
-  '广州正佳广场店',
-  '深圳万象城店',
-  '成都春熙路店',
-  '上海环球港店',
-  '广州天河城店',
-  '深圳海岸城店',
-]
+const STORE_NAMES = ['广州正佳广场店', '深圳万象城店', '成都春熙路店', '上海环球港店', '广州天河城店', '深圳海岸城店']
 
 export function generateAllSampleImages() {
   const images = {}

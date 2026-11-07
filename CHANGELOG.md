@@ -4,31 +4,48 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-07
+
 ### 新增
 
-- **GitHub Pages 自动部署**：新增 `.github/workflows/deploy-pages.yml`，push `main` 即自动构建并发布到
-  `https://wang189327-wq.github.io/candidate-entry/`，作为 Vercel 之外的零成本托管兜底，
-  避免单一平台依赖（Vercel 项目因仓库改名需重新绑定 GitHub 应用，手动改分支前无法自动触发）。
+- **单元测试体系**：引入 Vitest，共 64 项测试覆盖解析层、适配器契约、CSV 转义与 HTTP 封装；
+  `npm test` 可本地运行，CI 中作为合并门禁。
+- **代码规范工具链**：ESLint（react / react-hooks 插件）+ Prettier，
+  新增 `lint` / `lint:fix` / `format` / `format:check` / `coverage` / `verify` 脚本。
+- **Issue 模板**：新增缺陷报告与功能建议两份模板，降低外部参与门槛。
 
 ### 变更
 
+- 升级构建链路：Vite 5 → 7、Vitest 2 → 5，`npm audit` 漏洞数由 9 项降至 **0 项**。
+- `package.json` 项目名由 `jobseeker-portfolio` 更正为 `candidate-entry`，与仓库名一致。
+- 重写 `SPEC.md`：原文档描述的是早期 4 页签原型架构，已按当前
+  「5 页签 + 适配器可插拔」架构全面更新，补充适配器契约与工程化章节。
 - README 在线演示地址改指 GitHub Pages（已上线最新版）；Vercel 镜像徽章保留待更新。
 - 仓库 About 的 Homepage 同步更新为 GitHub Pages 地址。
-- **自定义域名与项目解绑**：Vercel 项目 `candidate-entry` 上移除 `katherineportfolio.cn`
-  与 `www.katherineportfolio.cn` 两个自定义域名（含主域名指向 `www` 的重定向规则），
-  并触发新部署以刷新生产别名的历史快照。域名与项目已完全解绑，可用于其他项目。
-  站点本身不受影响，仍可通过 `portfolio-web-wine-nine.vercel.app` 与 GitHub Pages 访问。
-  注：账号层仍保留 `katherineportfolio.cn` 的域名条目（Vercel 不开放该项删除权限），
-  但该条目已不指向任何部署，不影响解绑结果；如需彻底清除需在 Vercel 控制台手动操作。
-- **云端 Supabase 五张表已清空**：`candidates` / `sap_codes` / `images` / `feishu_accounts` /
-  `program_users` 的历史数据（含真实候选人手机号、微信号）全部删除，
-  仅保留重建的 `admin` 演示账号以维持 README 中的登录说明可用。
-  清空前快照存于本地私有备份目录（未纳入仓库）。
+
+### 修复
+
+- **手机号被误当作姓名写入数据库**：粘贴的聊天记录不完整（例如仅有手机号块）时，
+  手机号所在行会被识别为姓名。现改为按内容特征排除联系方式行，中英文姓名均不受影响。
+- **解析结果泄漏内部临时字段**：`parseText` 返回值中的 `_phone_block` / `_wechat_block`
+  会随记录流入导出的 JSON 文件与 Webhook 请求体，现已在返回前过滤。
+- **代理前缀拼接破坏 query 语义**：Webhook 适配器填写 `https://proxy/relay?to=` 这类
+  query 式代理前缀时，尾部斜杠被剥离会变成 `?tohttps://...`，导致转发失败。
+  现改为只折叠多余斜杠，保留最后一个。
+
+### 清理
+
+- 移除重构后遗留的死代码：`Tab1` 的 `parsedData`、`Tab2` 的 `entry`、
+  `Tab3` 的 `sampleImages` / `cloudImages` 三处从未被读取的状态变量。
+- `.gitignore` 增加 `coverage/` 与编辑器目录，避免报告文件误入仓库。
 
 ## [2.0.0] - 2026-11-07
 
 ### 新增
 
+- **GitHub Pages 自动部署**：新增 `.github/workflows/deploy-pages.yml`，push `main` 即自动构建并发布到
+  `https://wang189327-wq.github.io/candidate-entry/`，作为 Vercel 之外的零成本托管兜底，
+  避免单一平台依赖（Vercel 项目因仓库改名需重新绑定 GitHub 应用，手动改分支前无法自动触发）。
 - **写入目标可插拔架构**：`src/lib/adapters/` 抽象出统一适配器接口
   `{ id, name, fields, write(record, config), test(config) }`，
   「信息识别」与「数据落地」彻底解耦。
@@ -59,27 +76,9 @@
 - **切换页签后已填数据丢失**：所有 Tab 改为常驻挂载、仅切换显隐，组件 state 不再被卸载清空。
 - 写入目标变更改为通过 `integration-changed` 事件实时同步，Tab1 不再依赖窗口 focus 事件。
 
-### 安全
-
-- 移除 `src/data/sapConfig.js` 中硬编码的飞书 `App Secret` / `App Token`，改为占位示例。
-- 移除 `src/lib/adapters/feishu.js` 输入框占位符中残留的真实多维表格 `app_token`。
-- 桌面版 Supabase `service_role` key 改为环境变量注入（`SUPABASE_KEY`）。
-- 桌面版飞书凭证改为占位符 + `feishu_accounts.example.json` 示例。
-- 真实门店联系方式截图不随仓库分发。
-- 新增 GitHub Actions 密钥泄漏扫描（`app_secret` / 飞书 App ID / service_role JWT）。
-
-## [1.1.0] - 2026-11-07
+## [1.0.0] - 2026-06-15
 
 ### 新增
 
-- 中英双语 README（`README.md` / `README.en.md`）、MIT License、`.env.example`。
-- 收录桌面终版源码至 `desktop/`，附运行说明与 50 项功能清单。
-- 功能概览图 `docs/images/overview.png`。
-
-### 修复
-
-- 修复默认分支指向旧快照（访客看到的代码落后于 `master` 两个提交）的问题。
-
-## [1.0.0] - 2026-06
-
-初始版本：桌面版 Tkinter 六次迭代（v1.0 → 桌面终版）与 Web 版 React 原型。
+- 求职者信息录入 Web 版：React + Vite + Tailwind 复刻四页签。
+- 桌面版（Python Tkinter）：聊天记录解析、SAP 代码管理、图片库、飞书账号管理。
