@@ -2,7 +2,7 @@
 // 适合个人使用或数据不允许出内网的场景
 import { RECORD_FIELDS, recordToObject } from './types'
 
-function toCSV(records) {
+export function toCSV(records) {
   const header = RECORD_FIELDS.join(',')
   const escape = (v) => {
     const s = String(v ?? '')

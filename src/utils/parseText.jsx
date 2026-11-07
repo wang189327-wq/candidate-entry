@@ -1,10 +1,22 @@
-// 解析粘贴的聊天记录文本
+// 姓名：第一个非空、且不像联系方式 / 界面文案的行
+//
+// 注意：不能靠「位置」判断 —— 用户粘贴的记录可能不完整（例如只有手机号块），
+// 此时手机号所在行会被误当成姓名写入数据库。因此这里按内容特征排除。
+const PHONE_LIKE = /^[\d\s\-()（）+]{6,}$/
+const WECHAT_LIKE = /^(wx[a-zA-Z0-9_-]{4,}|[a-zA-Z][a-zA-Z0-9_-]{4,}_[a-zA-Z0-9_-]{2,})$/
+const UI_TEXT = new Set(['复制手机号', '复制微信号', '年龄', '沟通职位', '手机号', '微信号'])
+
+function looksLikeContact(line) {
+  if (PHONE_LIKE.test(line)) return true
+  if (/^wx/i.test(line) || WECHAT_LIKE.test(line)) return true
+  return false
+}
+
 export function parseText(text) {
-  if (!text.trim()) return null
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+  if (!text || !String(text).trim()) return null
+  const lines = String(text).split('\n').map(l => l.trim()).filter(Boolean)
 
   const data = {}
-
   // 手机号 / 微信号：按3行块解析
   let i = 0
   while (i < lines.length) {
@@ -27,17 +39,17 @@ export function parseText(text) {
   if (contactParts.length) data['联系方式'] = contactParts.join('/')
 
   // 年龄
-  const ageMatch = text.match(/(\d{1,3})\s*岁/)
+  const ageMatch = String(text).match(/(\d{1,3})\s*岁/)
   if (ageMatch) data['年龄'] = ageMatch[1]
 
-  // 姓名：第一个非空且不含关键词的行
+  // 姓名：第一个非空、且不像联系方式 / 界面文案的行
   for (const line of lines) {
     if (
       line &&
       !line.includes('的手机号：') &&
       !line.includes('的微信号：') &&
-      line !== '复制手机号' &&
-      line !== '复制微信号'
+      !UI_TEXT.has(line) &&
+      !looksLikeContact(line)
     ) {
       data['姓名'] = line
       break
@@ -45,14 +57,21 @@ export function parseText(text) {
   }
 
   // 门店名称：从「沟通职位」字段提取
-  const storeMatch = text.match(/沟通职位[：:]\s*(.+?)(?=\n|$)/)
+  const storeMatch = String(text).match(/沟通职位[：:]\s*(.+?)(?=\n|$)/)
   if (storeMatch) {
     const jobText = storeMatch[1].trim()
     const storeInParens = jobText.match(/（([^）]+)）/)
     if (storeInParens) data['门店名称'] = storeInParens[1]
   }
 
-  return Object.keys(data).length > 0 ? data : null
+  // 仅返回标准业务字段 —— 内部临时块（_phone_block / _wechat_block）
+  // 若随记录外流，会污染导出的 JSON 与 Webhook payload。
+  const result = {}
+  for (const key of Object.keys(data)) {
+    if (!key.startsWith('_')) result[key] = data[key]
+  }
+
+  return Object.keys(result).length > 0 ? result : null
 }
 
 // 根据门店名称查 SAP 代码

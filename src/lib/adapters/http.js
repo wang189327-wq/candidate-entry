@@ -8,7 +8,12 @@
 
 export async function postJson(url, body, options = {}) {
   const { proxy = '', timeout = 15000 } = options
-  const target = proxy ? `${proxy.replace(/\/+$/, '')}${url}` : url
+  // 代理前缀有两种用法：
+  //   1) 「路径式」前缀，如 https://proxy.com/relay/https://target  —— 尾部斜杠必须保留
+  //   2) 「query 式」前缀，如 https://proxy.com/relay?to=       —— 尾部斜杠若被剥离
+  //      会变成 ?tohttps://target，破坏 query 参数语义
+  // 因此只折叠多余的尾部斜杠，绝不剥离最后一个 —— 保留与否由用户自己决定。
+  const target = proxy ? `${proxy.replace(/\/{2,}$/, '/')}${url}` : url
   const payload = typeof body === 'string' ? body : JSON.stringify(body)
 
   try {
