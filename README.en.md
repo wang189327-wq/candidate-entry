@@ -5,7 +5,7 @@
 **Recruitment data entry automation: from BOSS Zhipin chat logs to any target system, in one click**
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
-[![Vercel](https://img.shields.io/badge/Vercel-mirror-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
+[![Vercel](https://img.shields.io/badge/Vercel-Alternate-000000?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
 [![React](https://img.shields.io/badge/Web-React_18-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![Python](https://img.shields.io/badge/Desktop-Python_Tkinter-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![Supabase](https://img.shields.io/badge/Cloud-Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
@@ -107,6 +107,17 @@ flowchart LR
 |---|---|---|
 | Web | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | [Try it live](https://wang189327-wq.github.io/candidate-entry/) |
 | Desktop | Python Tkinter · Feishu Open API · Pillow · bcrypt | 2,459 LOC, shipped to the recruiting team |
+
+### 🌐 Live Deployments
+
+Two public entry points, both auto-deployed from the `main` branch and kept in sync:
+
+| Entry | URL | Pipeline |
+|---|---|---|
+| Primary | [wang189327-wq.github.io/candidate-entry](https://wang189327-wq.github.io/candidate-entry/) | GitHub Actions → GitHub Pages |
+| Alternate | [portfolio-web-wine-nine.vercel.app](https://portfolio-web-wine-nine.vercel.app) | Vercel GitHub integration (production branch `main`) |
+
+Every push to `main` triggers both pipelines: GitHub Actions runs the build check and secret scan, then publishes Pages; Vercel produces the production deployment in parallel.
 
 ## 🛠️ Getting Started
 

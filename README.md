@@ -5,7 +5,7 @@
 **招聘信息录入自动化：从 BOSS 直聘聊天记录到任意业务系统，一键完成**
 
 [![Live Demo](https://img.shields.io/badge/Demo-在线演示-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
-[![Vercel](https://img.shields.io/badge/Vercel-镜像-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
+[![Vercel](https://img.shields.io/badge/Vercel-备选入口-000000?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
 [![React](https://img.shields.io/badge/Web-React_18-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![Python](https://img.shields.io/badge/Desktop-Python_Tkinter-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![Supabase](https://img.shields.io/badge/云存储-Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
@@ -109,6 +109,17 @@ flowchart LR
 |---|---|---|
 | Web 版 | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | 在线可玩，[点此体验](https://wang189327-wq.github.io/candidate-entry/) |
 | 桌面版 | Python Tkinter · 飞书 Open API · Pillow · bcrypt | 2459 行，实习期间团队投产版本 |
+
+### 🌐 在线部署
+
+两个公开入口，均由本仓库 `main` 分支自动部署、内容实时同步：
+
+| 入口 | 地址 | 部署方式 |
+|---|---|---|
+| 主线（推荐） | [wang189327-wq.github.io/candidate-entry](https://wang189327-wq.github.io/candidate-entry/) | GitHub Actions → GitHub Pages |
+| 备选 | [portfolio-web-wine-nine.vercel.app](https://portfolio-web-wine-nine.vercel.app) | Vercel GitHub 集成（生产分支 `main`） |
+
+每次 `push` 到 `main` 会同时触发两条链路：GitHub Actions 做构建校验与密钥扫描，通过后发布 Pages；Vercel 侧同步生成生产部署。
 
 ## 🛠️ 快速开始
 
