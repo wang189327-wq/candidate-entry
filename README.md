@@ -9,6 +9,7 @@
 [![Python](https://img.shields.io/badge/Desktop-Python_Tkinter-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![Supabase](https://img.shields.io/badge/云存储-Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Build](https://github.com/wang189327-wq/candidate-entry/actions/workflows/ci.yml/badge.svg)](https://github.com/wang189327-wq/candidate-entry/actions/workflows/ci.yml)
 
 [在线演示](https://portfolio-web-wine-nine.vercel.app) · 演示账号 `admin` / `Aa@123456` · [English](./README.en.md)
 
@@ -30,6 +31,12 @@
 
 ![功能概览](docs/images/overview.png)
 
+## 🎬 演示动线
+
+![演示动线](docs/images/demo.gif)
+
+<sub>从粘贴聊天记录到一键写入，全流程 7 步；写入目标可在「接入配置」中随时切换，切换后 Tab1 已填数据不丢失。</sub>
+
 ## 🚀 项目演进
 
 这不是一次性写完的作品，而是在真实业务中迭代了 6 个版本的劳动工具：
@@ -47,11 +54,36 @@
 
 | 模块 | 能力 |
 |---|---|
-| **Tab1 信息识别** | 粘贴聊天记录，正则解析姓名 / 手机号 / 微信号 / 年龄 / 门店；门店名 → SAP 代码自动查表回填；一键写入飞书多维表格 |
+| **Tab1 信息识别** | 粘贴聊天记录，正则解析姓名 / 手机号 / 微信号 / 年龄 / 门店；门店名 → SAP 代码自动查表回填；一键写入目标系统 |
 | **Tab2 SAP 代码管理** | 门店 ↔ 岗位 ↔ SAP 映射的树形管理：模糊搜索、增删改、双击编辑、发布状态统计、列宽记忆 |
 | **Tab3 图片库** | 店长联系方式截图等业务图片：预览 / 全屏 / 复制到剪贴板（直接粘进微信）/ 上传飞书附件 |
 | **Tab4 飞书账号管理** | 多飞书应用凭证管理、活跃账号切换、Tenant Access Token 连通性测试 |
-| **系统层** | 登录认证（本地 bcrypt / Supabase 云端）、用户管理与密码重置、多实例保护、界面布局持久化 |
+| **Tab5 接入配置** | **写入目标可插拔**：飞书多维表格 / 任意 Webhook（钉钉、企业微信、自建 API）/ Supabase 云端 / 本地 CSV 导出，一键切换 + 连通性测试 |
+| **系统层** | 登录认证（本地 bcrypt / Supabase 云端）、用户管理与密码重置、多实例保护、界面布局持久化、页签切换状态保留 |
+
+### 📸 界面一览
+
+| Tab1 信息识别 | Tab2 SAP 代码管理 |
+|---|---|
+| ![Tab1](docs/images/tab1-blank.png) | ![Tab2](docs/images/tab2-sap.png) |
+
+| Tab3 图片库 | Tab4 飞书账号管理 | Tab5 接入配置 |
+|---|---|---|
+| ![Tab3](docs/images/tab3-images.png) | ![Tab4](docs/images/tab4-accounts.png) | ![Tab5](docs/images/tab5-integration.png) |
+
+### 🔌 写入目标可插拔（不必用飞书）
+
+「识别」与「写入」彻底解耦：解析逻辑只产出标准记录（姓名 / 年龄 / 性别 / 联系方式 / SAP代码 / 意向岗位 / 门店名称），**写到哪里由你在「接入配置」中选**：
+
+| 目标 | 说明 |
+|---|---|
+| **Webhook · 通用 JSON** | POST 到任意 HTTP 接口：自建 API、中台、数据库网关，直接对接你公司现有系统 |
+| **Webhook · 群机器人** | 同一套接口换报文即可发到飞书 / 钉钉 / 企业微信群 |
+| **飞书多维表格** | 与桌面版同一套 Open API（浏览器直连若受跨域限制，可改用上面的 Webhook 方案） |
+| **Supabase 云端** | 本项目自带的 candidates 表，多设备共享 |
+| **本地 CSV / JSON** | 不依赖任何服务，浏览器直接下载文件，Excel 可打开 |
+
+> 新增一个目标系统只需实现 `{ id, name, fields, write(), test() }` 并注册到 `src/lib/adapters/index.js`，约 40 行代码。
 
 ## 🏗️ 架构与数据流
 
@@ -61,26 +93,29 @@ flowchart LR
     B -->|正则解析| C[姓名/联系方式/年龄/门店]
     C -->|门店名匹配| D[(门店-SAP<br/>映射表)]
     D -->|SAP自动回填| B
-    B -->|飞书 Open API| E[(飞书多维表格)]
-    B -->|Supabase REST| F[(云端 candidates)]
-    G[桌面版 Tkinter] -.同构.-> B
-    H[Web 版 React] -.同构.-> B
+    B -->|标准记录| T{写入目标<br/>可插拔}
+    T --> E[飞书多维表格]
+    T --> F[Webhook<br/>通用/群机器人]
+    T --> G[Supabase 云端]
+    T --> I[本地 CSV/JSON]
+    H[桌面版 Tkinter] -.同构.-> B
+    J[Web 版 React] -.同构.-> B
 ```
 
-**双端同构**：桌面版（`desktop/`，Python Tkinter，生产使用）与 Web 版（`src/`，React 18）实现同一套四页签交互；数据层本地 JSON 与 Supabase 云端双轨。
+**双端同构**：桌面版（`desktop/`，Python Tkinter，生产使用）与 Web 版（`src/`，React 18）实现同一套多页签交互；数据层本地 JSON 与 Supabase 云端双轨；写入层统一走适配器路由，目标系统可换。
 
 | 端 | 技术栈 | 说明 |
 |---|---|---|
 | Web 版 | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | 在线可玩，[点此体验](https://portfolio-web-wine-nine.vercel.app) |
-| 桌面版 | Python Tkinter · 飞书 Open API · Pillow · bcrypt | 2252 行，实习期间团队投产版本 |
+| 桌面版 | Python Tkinter · 飞书 Open API · Pillow · bcrypt | 2459 行，实习期间团队投产版本 |
 
 ## 🛠️ 快速开始
 
 ### Web 版
 
 ```bash
-git clone https://github.com/wang189327-wq/candidate-information--entry.git
-cd candidate-information--entry
+git clone https://github.com/wang189327-wq/candidate-entry.git
+cd candidate-entry
 npm install
 npm run dev          # http://localhost:5173
 ```
@@ -101,15 +136,19 @@ python 求职者信息录入.py    # 本地模式内置账号 admin / Aa@123456
 
 ```
 ├── src/                    # Web 版（React 18 + Vite + Tailwind）
-│   ├── components/         #   Tab1~Tab4 四大功能组件
+│   ├── components/         #   Tab1~Tab5 五大功能组件
 │   ├── data/               #   初始 SAP 配置与示例数据
-│   ├── lib/                #   Supabase 客户端
+│   ├── lib/
+│   │   ├── adapters/       #   写入目标适配器（飞书/Webhook/Supabase/本地）
+│   │   └── supabase.js     #   Supabase 客户端
 │   └── utils/              #   聊天记录解析、示例图片生成
 ├── desktop/                # 桌面版（Python Tkinter，生产版本）
-│   ├── 求职者信息录入.py     #   2252 行单文件应用
+│   ├── 求职者信息录入.py     #   2459 行单文件应用
 │   ├── 数据/                #   配置与示例数据（已脱敏）
 │   └── README.md           #   运行说明与数据文件规范
 ├── docs/images/            # 文档图片
+├── .github/workflows/      # CI：构建校验 + 密钥扫描
+├── CHANGELOG.md            # 更新日志
 ├── SPEC.md                 # Web 版设计规格
 └── .env.example            # 环境变量模板
 ```
