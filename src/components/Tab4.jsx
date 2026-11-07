@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
 import { sb } from '../lib/supabase'
-import bcrypt from 'bcryptjs'
 
-// 过渡期回退值：应用 supabase/migrations 的 verify_admin RPC 后不再使用。
-// 可通过构建变量 VITE_ADMIN_VERIFY_CODE 覆盖。
-const ADMIN_VERIFY_CODE = import.meta.env.VITE_ADMIN_VERIFY_CODE || '118814'
 const ADMIN_USERNAME = 'admin'
+
+// 迁移脚本未执行时 PostgREST 返回 PGRST202，据此给出可操作的提示
+function isRpcMissing(error) {
+  const msg = String(error?.message || '')
+  return error?.code === 'PGRST202' || msg.includes('Could not find the function')
+}
+
+const MIGRATION_HINT = '服务端未初始化，请先执行 supabase/migrations 下的迁移脚本'
 
 export default function Tab4() {
   const [accounts, setAccounts] = useState([])
@@ -63,7 +67,7 @@ export default function Tab4() {
     setForm({ alias: '', app_id_key: '', app_secret_key: '', app_token_key: '', password: '' })
   }
 
-  // 保存前检查（admin编辑admin账号需验证）
+  // 保存前检查：账号写操作一律需要管理员验证码（由服务端校验）
   function handleSave() {
     if (!form.alias) {
       alert('用户名不能为空')
@@ -79,112 +83,44 @@ export default function Tab4() {
     }
 
     const isNew = selectedIdx === null
-    const editingAccount = !isNew ? accounts[selectedIdx] : null
-    const isEditingAdmin = editingAccount?.alias === ADMIN_USERNAME
-
-    if (isEditingAdmin) {
-      setVerifyFor({ action: 'save', isNew })
-      setPendingForm({ ...form })
-      setVerifyCode('')
-      setVerifyOpen(true)
-    } else {
-      doSave(form, isNew)
+    if (isNew && !form.password) {
+      alert('新增账号需要设置密码')
+      return
     }
+
+    setVerifyFor({ action: 'save', isNew })
+    setPendingForm({ ...form })
+    setVerifyCode('')
+    setVerifyOpen(true)
   }
 
-  // 实际执行保存：所有写操作逐一检查 error，失败立即中断并提示
-  async function doSave(f, isNew) {
+  // 实际执行保存：走服务端函数，feishu_accounts 与 program_users 单事务写入
+  async function doSave(f, isNew, code) {
     try {
-      if (isNew) {
-        // 新增：写入 feishu_accounts + program_users
-        if (!f.password) {
-          alert('新增账号需要设置密码')
-          return
-        }
-        const { data: ins, error: insError } = await sb
-          .from('feishu_accounts')
-          .insert({
-            alias: f.alias,
-            app_id_key: f.app_id_key,
-            app_secret_key: f.app_secret_key,
-            app_token_key: f.app_token_key,
-          })
-          .select()
-        if (insError) throw insError
-        if (ins?.[0]) {
-          const hash = await bcrypt.hash(f.password, 10)
-          const { error: userError } = await sb.from('program_users').insert({
-            username: f.alias,
-            password_hash: hash,
-            role: 'guest',
-          })
-          if (userError) throw userError
-        }
-      } else {
-        // 编辑：更新 feishu_accounts
-        const acc = accounts[selectedIdx]
-        const { error: accError } = await sb
-          .from('feishu_accounts')
-          .update({
-            alias: f.alias,
-            app_id_key: f.app_id_key,
-            app_secret_key: f.app_secret_key,
-            app_token_key: f.app_token_key,
-          })
-          .eq('id', acc.id)
-        if (accError) throw accError
-
-        // 如果改了用户名，同步更新 program_users
-        if (f.alias !== acc.alias) {
-          const { data: users, error: findError } = await sb
-            .from('program_users')
-            .select('id, username, role')
-            .eq('username', acc.alias)
-          if (findError) throw findError
-          if (users?.[0]) {
-            if (f.password) {
-              const hash = await bcrypt.hash(f.password, 10)
-              const { error: updError } = await sb
-                .from('program_users')
-                .update({ username: f.alias, password_hash: hash })
-                .eq('id', users[0].id)
-              if (updError) throw updError
-            } else {
-              const { error: updError } = await sb
-                .from('program_users')
-                .update({ username: f.alias })
-                .eq('id', users[0].id)
-              if (updError) throw updError
-            }
-          }
-        } else if (f.password) {
-          // 没改用户名但改了密码
-          const { data: users, error: findError } = await sb
-            .from('program_users')
-            .select('id, username, role')
-            .eq('username', f.alias)
-          if (findError) throw findError
-          if (users?.[0]) {
-            const hash = await bcrypt.hash(f.password, 10)
-            const { error: updError } = await sb
-              .from('program_users')
-              .update({ password_hash: hash })
-              .eq('id', users[0].id)
-            if (updError) throw updError
-          }
-        }
-      }
+      const acc = isNew ? null : accounts[selectedIdx]
+      const { error } = await sb.rpc('admin_save_account', {
+        p_code: code,
+        p_alias: f.alias,
+        p_password: f.password || null,
+        p_account_id: acc?.id || null,
+        p_old_alias: acc?.alias || null,
+        p_app_id_key: f.app_id_key,
+        p_app_secret_key: f.app_secret_key,
+        p_app_token_key: f.app_token_key,
+        p_role: 'guest',
+      })
+      if (error) throw error
 
       await loadAccounts()
       setSelectedIdx(null)
       setForm({ alias: '', app_id_key: '', app_secret_key: '', app_token_key: '', password: '' })
       alert('保存成功')
     } catch (e) {
-      alert('保存失败：' + (e?.message || e))
+      alert('保存失败：' + (isRpcMissing(e) ? MIGRATION_HINT : e?.message || e))
     }
   }
 
-  // 删除前验证
+  // 删除前验证：同样走验证码弹窗，实际删除由服务端完成
   function handleDelete() {
     if (selectedIdx === null) {
       alert('请先选中要删除的账号')
@@ -196,54 +132,52 @@ export default function Tab4() {
       return
     }
     if (!confirm(`确定要删除账号「${acc.alias}」吗？`)) return
-    doDelete(acc)
+    setVerifyFor({ action: 'delete', account: acc })
+    setVerifyCode('')
+    setVerifyOpen(true)
   }
 
-  async function doDelete(acc) {
+  async function doDelete(acc, code) {
     try {
-      // 从 program_users 删除（显式列，不拉取密码哈希）
-      const { data: users, error: findError } = await sb
-        .from('program_users')
-        .select('id, username, role')
-        .eq('username', acc.alias)
-      if (findError) throw findError
-      if (users?.[0]) {
-        const { error: delUser } = await sb.from('program_users').delete().eq('id', users[0].id)
-        if (delUser) throw delUser
-      }
-      // 从 feishu_accounts 删除
-      const { error: delAcc } = await sb.from('feishu_accounts').delete().eq('id', acc.id)
-      if (delAcc) throw delAcc
+      const { error } = await sb.rpc('admin_delete_account', {
+        p_code: code,
+        p_account_id: acc.id,
+        p_alias: acc.alias,
+      })
+      if (error) throw error
+
       await loadAccounts()
       setSelectedIdx(null)
       setForm({ alias: '', app_id_key: '', app_secret_key: '', app_token_key: '', password: '' })
       alert('删除成功')
     } catch (e) {
-      alert('删除失败：' + (e?.message || e))
+      alert('删除失败：' + (isRpcMissing(e) ? MIGRATION_HINT : e?.message || e))
     }
   }
 
-  // 验证弹窗提交：优先服务端校验（verify_admin RPC），未部署时回退本地比对
+  // 验证弹窗提交：验证码由服务端校验，通过后执行对应动作
   async function handleVerifySubmit() {
     const code = verifyCode.trim()
     if (!code) {
       alert('请输入验证码')
       return
     }
+
     const { data: ok, error } = await sb.rpc('verify_admin', { p_code: code })
-    if (!error) {
-      if (!ok) {
-        alert('验证码错误')
-        return
-      }
-    } else if (code !== ADMIN_VERIFY_CODE) {
-      // RPC 未部署（或调用异常）→ 过渡期本地比对
+    if (error) {
+      alert(isRpcMissing(error) ? MIGRATION_HINT : '验证码校验失败：' + error.message)
+      return
+    }
+    if (!ok) {
       alert('验证码错误')
       return
     }
+
     setVerifyOpen(false)
     if (verifyFor.action === 'save') {
-      doSave(pendingForm, verifyFor.isNew)
+      await doSave(pendingForm, verifyFor.isNew, code)
+    } else if (verifyFor.action === 'delete') {
+      await doDelete(verifyFor.account, code)
     }
   }
 
@@ -419,7 +353,9 @@ export default function Tab4() {
           <div className="bg-white rounded-lg shadow-xl p-6 w-80">
             <h3 className="text-base font-bold text-gray-800 mb-1">验证管理员身份</h3>
             <p className="text-xs text-gray-500 mb-4">
-              修改 / 保存管理员账号「{pendingForm?.alias}」需要输入管理员验证码
+              {verifyFor?.action === 'delete'
+                ? `删除账号「${verifyFor?.account?.alias}」需要输入管理员验证码`
+                : `保存账号「${pendingForm?.alias}」需要输入管理员验证码`}
             </p>
             <input
               type="password"

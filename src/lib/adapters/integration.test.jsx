@@ -98,7 +98,8 @@ describe('接入配置按目标隔离', () => {
 
 describe('writeCandidate 路由到当前目标', () => {
   it('路由到所选适配器并把参数传给它', async () => {
-    saveIntegration('webhook', { url: 'https://a.example.com' })
+    // 用必然瞬时连接失败的本地地址：不依赖 DNS/外网，避免测试偶发超时
+    saveIntegration('webhook', { url: 'http://127.0.0.1:1/hook' })
     const { writeCandidate } = await import('./index')
     const res = await writeCandidate({ 姓名: '张三', 性别: '', 年龄: '' })
     // 测试环境无真实网络，webhook 适配器会失败 —— 但失败也应带上正确的适配器标识

@@ -56,7 +56,7 @@ Not a one-shot portfolio piece — it went through 6 iterations driven by real b
 | **Tab1 Parsing** | Paste chat log → regex-extract name / phone / WeChat / age / store; store name → SAP code auto-lookup; write to the configured target |
 | **Tab2 SAP Codes** | Table-based management of store ↔ position ↔ SAP mappings: filter by city / publish status, CRUD, double-click a row to edit, publish stats |
 | **Tab3 Image Library** | Unified store-asset storage: preview / fullscreen view / copy image path & link, upload to cloud storage, group by SAP code |
-| **Tab4 Accounts** | System account management: create/edit users and reset passwords (admins see all, regular users only their own); also holds Feishu app credentials (App ID / App Secret / App Token) used by the Feishu write target |
+| **Tab4 Accounts** | System account management: create/edit users and reset passwords (admins see all, regular users only their own); writes require an admin verification code validated server-side; also holds Feishu app credentials used by the Feishu write target |
 | **Tab5 Integrations** | **Pluggable write target**: Feishu Base / any Webhook (DingTalk, WeCom, custom API) / Supabase / local CSV export — switch + test connectivity in one click |
 | **System** | Auth (bcrypt), user management, tab state preserved across switches |
 
