@@ -4,14 +4,15 @@
 
 **Recruitment data entry automation: from BOSS Zhipin chat logs to Feishu (Lark) Base, in one click**
 
-[![Vercel](https://img.shields.io/badge/Vercel-Live_Demo-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
+[![Vercel](https://img.shields.io/badge/Vercel-mirror-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
 [![React](https://img.shields.io/badge/Web-React_18-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![Python](https://img.shields.io/badge/Desktop-Python_Tkinter-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![Supabase](https://img.shields.io/badge/Cloud-Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Build](https://github.com/wang189327-wq/candidate-entry/actions/workflows/ci.yml/badge.svg)](https://github.com/wang189327-wq/candidate-entry/actions/workflows/ci.yml)
 
-[Live Demo](https://portfolio-web-wine-nine.vercel.app) · Demo account `admin` / `Aa@123456` · [中文](./README.md)
+[Live Demo](https://wang189327-wq.github.io/candidate-entry/) · Demo account `admin` / `Aa@123456` · [中文](./README.md)
 
 </div>
 
@@ -104,7 +105,7 @@ flowchart LR
 
 | Client | Stack | Notes |
 |---|---|---|
-| Web | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | [Try it live](https://portfolio-web-wine-nine.vercel.app) |
+| Web | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | [Try it live](https://wang189327-wq.github.io/candidate-entry/) |
 | Desktop | Python Tkinter · Feishu Open API · Pillow · bcrypt | 2,459 LOC, shipped to the recruiting team |
 
 ## 🛠️ Getting Started

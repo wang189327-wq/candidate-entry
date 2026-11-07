@@ -4,6 +4,21 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **GitHub Pages 自动部署**：新增 `.github/workflows/deploy-pages.yml`，push `main` 即自动构建并发布到
+  `https://wang189327-wq.github.io/candidate-entry/`，作为 Vercel 之外的零成本托管兜底，
+  避免单一平台依赖（Vercel 项目因仓库改名需重新绑定 GitHub 应用，手动改分支前无法自动触发）。
+
+### 变更
+
+- README 在线演示地址改指 GitHub Pages（已上线最新版）；Vercel 镜像徽章保留待更新。
+- 仓库 About 的 Homepage 同步更新为 GitHub Pages 地址。
+- **云端 Supabase 五张表已清空**：`candidates` / `sap_codes` / `images` / `feishu_accounts` /
+  `program_users` 的历史数据（含真实候选人手机号、微信号）全部删除，
+  仅保留重建的 `admin` 演示账号以维持 README 中的登录说明可用。
+  清空前快照存于 `本地私有备份目录`。
+
 ## [2.0.0] - 2026-11-07
 
 ### 新增

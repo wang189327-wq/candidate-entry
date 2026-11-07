@@ -4,14 +4,15 @@
 
 **招聘信息录入自动化：从 BOSS 直聘聊天记录到飞书多维表格，一键完成**
 
-[![Vercel](https://img.shields.io/badge/Vercel-在线演示-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Demo-在线演示-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
+[![Vercel](https://img.shields.io/badge/Vercel-镜像-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
 [![React](https://img.shields.io/badge/Web-React_18-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![Python](https://img.shields.io/badge/Desktop-Python_Tkinter-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![Supabase](https://img.shields.io/badge/云存储-Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Build](https://github.com/wang189327-wq/candidate-entry/actions/workflows/ci.yml/badge.svg)](https://github.com/wang189327-wq/candidate-entry/actions/workflows/ci.yml)
 
-[在线演示](https://portfolio-web-wine-nine.vercel.app) · 演示账号 `admin` / `Aa@123456` · [English](./README.en.md)
+[在线演示](https://wang189327-wq.github.io/candidate-entry/) · 演示账号 `admin` / `Aa@123456` · [English](./README.en.md)
 
 </div>
 
@@ -106,7 +107,7 @@ flowchart LR
 
 | 端 | 技术栈 | 说明 |
 |---|---|---|
-| Web 版 | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | 在线可玩，[点此体验](https://portfolio-web-wine-nine.vercel.app) |
+| Web 版 | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | 在线可玩，[点此体验](https://wang189327-wq.github.io/candidate-entry/) |
 | 桌面版 | Python Tkinter · 飞书 Open API · Pillow · bcrypt | 2459 行，实习期间团队投产版本 |
 
 ## 🛠️ 快速开始
