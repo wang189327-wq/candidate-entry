@@ -1,0 +1,11 @@
+{
+  "target": "feishu",
+  "webhook": {
+    "url": "",
+    "mode": "generic",
+    "proxy": ""
+  },
+  "csv": {
+    "path": ""
+  }
+}

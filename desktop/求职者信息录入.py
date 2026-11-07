@@ -15,6 +15,8 @@ from PIL import Image, ImageTk
 import urllib.request
 import urllib.error
 import io
+import csv
+from datetime import datetime
 import bcrypt
 from supabase import create_client, Client
 
@@ -190,11 +192,17 @@ class LoginWindow:
     def get_login_info(self):
         return self.login_info
 
-DATA_DIR = os.path.join(os.path.expanduser("~"), "Desktop", "数据")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# 数据目录：优先使用环境变量指定，其次沿用桌面「数据」目录（生产环境），
+# 若不存在则回退到脚本同级的「数据」目录（开源副本开箱即用）
+DATA_DIR = os.environ.get("APP_DATA_DIR") or os.path.join(os.path.expanduser("~"), "Desktop", "数据")
+if not os.path.isdir(DATA_DIR):
+    DATA_DIR = os.path.join(BASE_DIR, "数据")
 IMG_LIBRARY_DIR = os.path.join(DATA_DIR, "SAP图片库")
 FIXED_IMG_DIR = os.path.join(DATA_DIR, "固定图片")
 SAP_CONFIG_FILE = os.path.join(DATA_DIR, "sap_config.json")
 LAYOUT_CONFIG_FILE = os.path.join(DATA_DIR, "layout_config.json")
+INTEGRATION_FILE = os.path.join(DATA_DIR, "integration_config.json")
 STYLE_BG    = "#C7EDCC"
 STYLE_BG2   = "#D5EDD8"
 STYLE_BTN   = "#A8D4A8"
@@ -230,6 +238,8 @@ class App(tk.Tk):
         self._build_tab3()
         self._load_feishu_accounts()
         self._build_tab4()
+        # 写入目标决定 Tab1 按钮文案
+        self._btn_feishu.configure(text=self._write_button_text())
         w, h = 1200, 820
         sw = self.winfo_screenwidth()
         sh = self.winfo_screenheight()
@@ -528,14 +538,168 @@ class App(tk.Tk):
         self.update()
         try:
             write_data = dict(self._parsed_data) if self._parsed_data else {}
-            self._do_write_feishu(write_data)
+            target_label = self._do_write_record(write_data)
             self._txt.delete("1.0", "end")
             self._parsed_data = {}
-            messagebox.showinfo("成功", "候选人信息已写入飞书多维表格")
+            messagebox.showinfo("成功", f"候选人信息已{target_label}")
         except Exception as e:
             messagebox.showerror("写入失败", str(e))
         finally:
-            self._btn_feishu.configure(state="normal", text="写入飞书")
+            self._btn_feishu.configure(state="normal", text=self._write_button_text())
+
+    # ==================== 多目标写入 ====================
+    def _on_target_changed(self):
+        """切换写入目标时启用/禁用相关输入项"""
+        target = self._target_var.get()
+        is_webhook = (target == "webhook")
+        self._target_mode_box.configure(state="readonly" if is_webhook else "disabled")
+        self._target_url_entry.configure(state="normal" if is_webhook else "disabled")
+        self._target_proxy_entry.configure(state="normal" if is_webhook else "disabled")
+        hints = {
+            "feishu": "飞书多维表格：使用当前活跃账号的凭证写入",
+            "webhook": "Webhook：generic=通用JSON，feishu/dingtalk/wecom=群机器人报文",
+            "csv": "本地 CSV：追加保存到本地文件，可用 Excel 打开",
+        }
+        self._target_hint.configure(text=hints.get(target, ""))
+        if hasattr(self, "_btn_feishu"):
+            self._btn_feishu.configure(text=self._write_button_text())
+
+    def _on_save_target(self):
+        cfg = self._load_integration()
+        cfg["target"] = self._target_var.get()
+        cfg["webhook"] = {
+            "url": self._target_url_entry.get().strip(),
+            "mode": self._target_mode_var.get(),
+            "proxy": self._target_proxy_entry.get().strip(),
+        }
+        cfg["csv"] = {"path": self._target_csv_var.get().strip() or os.path.join(DATA_DIR, "候选人记录.csv")}
+        try:
+            self._save_integration(cfg)
+        except Exception as e:
+            messagebox.showerror("保存失败", str(e))
+            return
+        self._on_target_changed()
+        messagebox.showinfo("成功", f"写入目标已保存：{self._target_var.get()}")
+
+    def _on_test_target(self):
+        target = self._target_var.get()
+        if target == "feishu":
+            try:
+                token = self._get_tenant_access_token()
+            except Exception as e:
+                messagebox.showerror("连接失败", str(e))
+                return
+            messagebox.showinfo("连接正常", "飞书凭证有效" if token else "飞书认证失败")
+            return
+        if target == "csv":
+            path = self._target_csv_var.get().strip() or os.path.join(DATA_DIR, "候选人记录.csv")
+            messagebox.showinfo("本地导出", f"记录将追加到：\n{path}")
+            return
+        url = self._target_url_entry.get().strip()
+        if not url:
+            messagebox.showwarning("提示", "请先填写接口地址")
+            return
+        try:
+            self._write_via_webhook(
+                {"姓名": "测试", "意向岗位": "连通性测试"},
+                {"url": url, "mode": self._target_mode_var.get(), "proxy": self._target_proxy_entry.get().strip()},
+            )
+            messagebox.showinfo("连接正常", "接口已收到测试请求")
+        except Exception as e:
+            messagebox.showerror("连接失败", str(e))
+
+    def _load_integration(self):
+        """读取写入目标配置（飞书 / Webhook / 本地CSV）"""
+        cfg = {
+            "target": "feishu",
+            "webhook": {"url": "", "mode": "generic", "proxy": ""},
+            "csv": {"path": os.path.join(DATA_DIR, "候选人记录.csv")},
+        }
+        try:
+            if os.path.exists(INTEGRATION_FILE):
+                with open(INTEGRATION_FILE, "r", encoding="utf-8") as f:
+                    saved = json.load(f)
+                cfg["target"] = saved.get("target", cfg["target"])
+                for k in ("webhook", "csv"):
+                    if isinstance(saved.get(k), dict):
+                        cfg[k].update(saved[k])
+        except Exception:
+            pass
+        return cfg
+
+    def _save_integration(self, cfg):
+        with open(INTEGRATION_FILE, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+    def _write_button_text(self):
+        target = self._load_integration()["target"]
+        return {"feishu": "写入飞书", "webhook": "发送接口", "csv": "导出CSV"}.get(target, "写入飞书")
+
+    def _do_write_record(self, data):
+        """按配置的写入目标分发，返回给用户看的结果描述"""
+        cfg = self._load_integration()
+        target = cfg["target"]
+        if target == "webhook":
+            self._write_via_webhook(data, cfg["webhook"])
+            return "发送到 Webhook 接口"
+        if target == "csv":
+            path = self._write_to_csv(data, cfg["csv"])
+            return f"已追加保存到 {os.path.basename(path)}"
+        self._do_write_feishu(data)
+        return "写入飞书多维表格"
+
+    def _write_via_webhook(self, data, wh):
+        """POST 到任意 HTTP 接口：支持通用 JSON / 飞书机器人 / 钉钉机器人 / 企业微信机器人"""
+        url = (wh.get("url") or "").strip()
+        if not url:
+            raise Exception("请先在「Tab4 · 写入目标」中填写接口地址")
+        mode = wh.get("mode", "generic")
+        proxy = (wh.get("proxy") or "").strip()
+        if proxy:
+            url = proxy.rstrip("/") + url
+
+        fields = ["姓名", "年龄", "性别", "联系方式", "SAP代码", "意向岗位", "门店名称"]
+        text = "｜".join(f"{k}：{data[k]}" for k in fields if data.get(k))
+        if mode == "feishu":
+            body = {"msg_type": "text", "content": {"text": f"【新人登记】{text}"}}
+        elif mode == "dingtalk":
+            body = {"msgtype": "text", "text": {"content": f"【新人登记】{text}"}}
+        elif mode == "wecom":
+            body = {"msgtype": "text", "text": {"content": f"【新人登记】{text}"}}
+        else:
+            body = {k: data[k] for k in fields if data.get(k)}
+            body["source"] = "candidate-entry"
+
+        req = urllib.request.Request(url, data=json.dumps(body, ensure_ascii=False).encode("utf-8"), method="POST")
+        req.add_header("Content-Type", "application/json")
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                result = json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            raise Exception(f"接口返回 HTTP {e.code}：{e.read().decode('utf-8', 'ignore')[:200]}")
+        code = result.get("code", result.get("errcode"))
+        if code not in (None, 0):
+            raise Exception(f"接口返回错误：{code} {result.get('msg') or result.get('errmsg') or ''}")
+
+    def _write_to_csv(self, data, csv_cfg):
+        """追加写入本地 CSV（Excel 可直接打开）"""
+        path = (csv_cfg.get("path") or "").strip() or os.path.join(DATA_DIR, "候选人记录.csv")
+        if not os.path.isabs(path):
+            path = os.path.join(BASE_DIR, path)
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        fields = ["录入时间", "姓名", "年龄", "性别", "联系方式", "SAP代码", "意向岗位", "门店名称"]
+        exists = os.path.exists(path)
+        with open(path, "a", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            if not exists:
+                writer.writerow(fields)
+            writer.writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                data.get("姓名", ""), data.get("年龄", ""), data.get("性别", ""),
+                data.get("联系方式", ""), data.get("SAP代码", ""),
+                data.get("意向岗位", ""), data.get("门店名称", ""),
+            ])
+        return path
 
     def _do_write_feishu(self, data):
         # 1. 认证
@@ -1559,6 +1723,44 @@ class App(tk.Tk):
             tk.Button(hdr_bar, text="用户管理", bg=STYLE_BTN, relief="flat",
                       font=("微软雅黑", 9), command=self._on_open_user_admin,
                       cursor="hand2").pack(side="right", padx=(0, 4), pady=4)
+
+        # 写入目标配置条：飞书多维表格 / 任意 Webhook / 本地 CSV
+        integ = self._load_integration()
+        self._target_var = tk.StringVar(value=integ["target"])
+        self._target_mode_var = tk.StringVar(value=integ["webhook"].get("mode", "generic"))
+        self._target_proxy_var = tk.StringVar(value=integ["webhook"].get("proxy", ""))
+        self._target_csv_var = tk.StringVar(value=integ["csv"].get("path", ""))
+
+        target_bar = tk.Frame(fr, bg=STYLE_BG2, relief="solid", bd=1)
+        target_bar.pack(fill="x", padx=8, pady=(6, 0))
+        tk.Label(target_bar, text="写入目标：", bg=STYLE_BG2, font=("微软雅黑", 9, "bold")).pack(side="left", padx=(6, 4))
+        for text, val in (("飞书多维表格", "feishu"), ("Webhook 接口", "webhook"), ("本地 CSV", "csv")):
+            tk.Radiobutton(target_bar, text=text, value=val, variable=self._target_var,
+                           bg=STYLE_BG2, font=("微软雅黑", 9), activebackground=STYLE_BG2,
+                           command=self._on_target_changed).pack(side="left", padx=2)
+
+        tk.Label(target_bar, text="报文", bg=STYLE_BG2, font=("微软雅黑", 9)).pack(side="left", padx=(10, 2))
+        self._target_mode_box = ttk.Combobox(target_bar, textvariable=self._target_mode_var, width=16, state="readonly",
+                                             values=("generic", "feishu", "dingtalk", "wecom"))
+        self._target_mode_box.pack(side="left")
+
+        tk.Label(target_bar, text="接口地址", bg=STYLE_BG2, font=("微软雅黑", 9)).pack(side="left", padx=(10, 2))
+        self._target_url_entry = tk.Entry(target_bar, width=42, font=("微软雅黑", 9))
+        self._target_url_entry.insert(0, integ["webhook"].get("url", ""))
+        self._target_url_entry.pack(side="left")
+
+        tk.Label(target_bar, text="代理前缀", bg=STYLE_BG2, font=("微软雅黑", 9)).pack(side="left", padx=(10, 2))
+        self._target_proxy_entry = tk.Entry(target_bar, width=20, font=("微软雅黑", 9))
+        self._target_proxy_entry.insert(0, integ["webhook"].get("proxy", ""))
+        self._target_proxy_entry.pack(side="left")
+
+        tk.Button(target_bar, text="保存配置", bg=STYLE_BTN, relief="flat", font=("微软雅黑", 9),
+                  command=self._on_save_target, cursor="hand2").pack(side="left", padx=8, pady=4)
+        tk.Button(target_bar, text="测试连接", bg=STYLE_BTN, relief="flat", font=("微软雅黑", 9),
+                  command=self._on_test_target, cursor="hand2").pack(side="left", pady=4)
+        self._target_hint = tk.Label(target_bar, text="", bg=STYLE_BG2, font=("微软雅黑", 8), fg="#555")
+        self._target_hint.pack(side="left", padx=6)
+        self._on_target_changed()
 
         paned = ttk.PanedWindow(fr, orient="horizontal")
         paned.pack(fill="both", expand=True, padx=8, pady=8)
