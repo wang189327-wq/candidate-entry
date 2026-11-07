@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { parseText, lookupSapByStore, generateSampleText } from '../utils/parseText.jsx'
 import { generateAllSampleImages } from '../utils/generateImages.jsx'
 import { sb } from '../lib/supabase'
+import { writeCandidate, writeButtonLabel, loadIntegration, onIntegrationChange } from '../lib/adapters'
 
 // Tab1：信息识别
 export default function Tab1() {
@@ -22,12 +23,17 @@ export default function Tab1() {
   const [candidates, setCandidates] = useState([])
   const [sapLoading, setSapLoading] = useState(true)
   const [showList, setShowList] = useState(false)
+  // 当前写入目标（可在「接入配置」中切换；切回本页时重新读取）
+  const [target, setTarget] = useState(loadIntegration())
 
   useEffect(() => {
     setSampleImages(generateAllSampleImages())
     loadSapConfig()
     loadCandidates()
   }, [])
+
+  // 「接入配置」中切换写入目标后，实时同步按钮文案与底部提示
+  useEffect(() => onIntegrationChange(() => setTarget(loadIntegration())), [])
 
   async function loadSapConfig() {
     setSapLoading(true)
@@ -47,17 +53,14 @@ export default function Tab1() {
     if (data) setCandidates(data)
   }
 
-  function handleParse() {
-    if (!rawText.trim()) {
-      alert('请先粘贴聊天记录文本')
-      return
-    }
-    const result = parseText(rawText)
+  // 解析并回填字段（文本由调用方传入，避免依赖尚未提交的 state）
+  function applyParse(text) {
+    const result = parseText(text)
     if (!result) {
       setParsedData(null)
       setFields(f => ({ ...f, 姓名: '', 联系方式: '', 年龄: '', 门店名称: '', 'SAP代码': '' }))
       alert('未能识别候选人信息，请检查格式是否正确')
-      return
+      return false
     }
     setParsedData(result)
     const storeName = result['门店名称'] || ''
@@ -70,6 +73,15 @@ export default function Tab1() {
       门店名称: storeName,
       'SAP代码': sapCode || result['SAP代码'] || '',
     }))
+    return true
+  }
+
+  function handleParse() {
+    if (!rawText.trim()) {
+      alert('请先粘贴聊天记录文本')
+      return
+    }
+    applyParse(rawText)
   }
 
   function handleClear() {
@@ -85,29 +97,37 @@ export default function Tab1() {
     }
     setWriteStatus('loading')
     try {
-      await sb.from('candidates').insert({
-        name: fields.姓名,
-        age: fields.年龄,
-        store: fields.门店名称,
-        position: fields['意向岗位'],
-        phone: fields.联系方式,
-        status: '待跟进',
-        entry_date: new Date().toLocaleDateString('zh-CN'),
+      const res = await writeCandidate({
+        '姓名': fields.姓名,
+        '年龄': fields.年龄,
+        '性别': fields.性别,
+        '联系方式': fields.联系方式,
+        'SAP代码': fields['SAP代码'],
+        '意向岗位': fields['意向岗位'],
+        '门店名称': fields.门店名称,
       })
-      await loadCandidates()
+      if (!res.ok) {
+        setWriteStatus('error')
+        setTimeout(() => setWriteStatus('idle'), 2500)
+        alert('写入失败：' + res.message)
+        return
+      }
+      // 写入云端数据库时同步刷新左侧列表
+      if (res.adapterId === 'supabase') await loadCandidates()
       setWriteStatus('success')
       setTimeout(() => setWriteStatus('idle'), 2500)
     } catch (e) {
-      alert('写入失败：' + e.message)
       setWriteStatus('error')
       setTimeout(() => setWriteStatus('idle'), 2500)
+      alert('写入失败：' + (e?.message || e))
     }
   }
 
   function handleFillSample() {
     const store = '广州正佳广场店'
-    setRawText(generateSampleText(store))
-    setTimeout(handleParse, 50)
+    const sample = generateSampleText(store)
+    setRawText(sample)
+    applyParse(sample)
   }
 
   const ageVal = fields['年龄']
@@ -238,11 +258,15 @@ export default function Tab1() {
           <button onClick={handleWriteFeishu} disabled={writeStatus === 'loading' || writeStatus === 'success'}
             className={`px-6 py-2 rounded text-sm font-medium transition text-white ${writeStatus === 'success' ? 'bg-green-400' : 'hover:scale-[1.02]'}`}
             style={{ backgroundColor: writeStatus === 'success' ? '#4ade80' : '#A8D4A8' }}>
-            {writeStatus === 'loading' ? '写入中...' : writeStatus === 'success' ? '✓ 已录入' : '录入云端'}
+            {writeStatus === 'loading' ? '写入中...' : writeStatus === 'success' ? '✓ 已完成' : writeButtonLabel(target.adapterId)}
           </button>
           <button onClick={handleClear} className="px-5 py-2 rounded text-sm font-medium transition hover:scale-[1.02] text-white" style={{ backgroundColor: '#FFCCCC' }}>
             清空
           </button>
+          <span className="self-center text-xs text-gray-400">
+            写入目标：{target.adapterId === 'supabase' ? 'Supabase 云端' : target.adapterId === 'feishu' ? '飞书多维表格' : target.adapterId === 'webhook' ? 'Webhook 接口' : '本地文件导出'}
+            （可在「接入配置」中切换）
+          </span>
         </div>
       </div>
     </div>

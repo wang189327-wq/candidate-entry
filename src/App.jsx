@@ -3,12 +3,13 @@ import Tab1 from './components/Tab1'
 import Tab2 from './components/Tab2'
 import Tab3 from './components/Tab3'
 import Tab4 from './components/Tab4'
+import Tab5 from './components/Tab5'
 import { sb } from './lib/supabase'
 import bcrypt from 'bcryptjs'
 
-const TAB_COMPONENTS = [Tab1, Tab2, Tab3, Tab4]
-const TAB_LABELS = ['信息识别', 'SAP代码管理', '图片库', '登录账号']
-const TAB_VISIBLE_TO_GUEST = [true, false, false, false]
+const TAB_COMPONENTS = [Tab1, Tab2, Tab3, Tab4, Tab5]
+const TAB_LABELS = ['信息识别', 'SAP代码管理', '图片库', '登录账号', '接入配置']
+const TAB_VISIBLE_TO_GUEST = [true, false, false, false, false]
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -116,8 +117,8 @@ export default function App() {
   }
 
   // 管理员：显示所有 Tab
-  const ActiveComponent = TAB_COMPONENTS[activeTab]
-
+  // 所有 Tab 一并挂载、仅切换显隐 —— 这样切换页签时组件状态（已识别的字段、
+  // 已填的表单、滚动位置）不会丢失。
   return (
     <div className="min-h-screen bg-styleBg flex flex-col">
       {/* 顶部标题 */}
@@ -154,7 +155,11 @@ export default function App() {
 
       {/* Tab 内容 */}
       <div className="flex-1 overflow-auto">
-        <ActiveComponent />
+        {TAB_COMPONENTS.map((Comp, i) => (
+          <div key={i} className={activeTab === i ? 'block' : 'hidden'}>
+            <Comp />
+          </div>
+        ))}
       </div>
     </div>
   )
