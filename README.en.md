@@ -130,7 +130,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Cloud features (login / SAP sync) require your own Supabase project — see [`.env.example`](./.env.example). All tab features work offline with localStorage persistence.
+Cloud features (login / SAP sync / cloud writes) require your own Supabase project — see [`.env.example`](./.env.example). Without Supabase, Tab1~Tab4 remain fully functional via localStorage, and the write target can be switched to Feishu / Webhook / local export in the "Integration" tab.
 
 ### Desktop
 

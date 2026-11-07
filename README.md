@@ -132,7 +132,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-云端功能（登录 / SAP 云同步）需自建 Supabase 项目，参考 [`.env.example`](./.env.example)。纯前端原型模式下 Tab 功能全部可用（localStorage 持久化）。
+云端功能（登录 / SAP 云同步 / 云端写入）需自建 Supabase 项目，参考 [`.env.example`](./.env.example)。未配置 Supabase 时，Tab1~Tab4 的核心功能仍可完整使用（localStorage 持久化），写入目标可在「接入配置」中切换到飞书 / Webhook / 本地导出。
 
 ### 桌面版
 
@@ -161,7 +161,7 @@ python 求职者信息录入.py    # 本地模式内置账号 admin / Aa@123456
 ├── docs/images/            # 文档图片
 ├── .github/workflows/      # CI：构建校验 + 密钥扫描
 ├── CHANGELOG.md            # 更新日志
-├── SPEC.md                 # Web 版设计规格
+├── SPEC.md                 # 技术规格（架构 / 适配器契约 / 工程化）
 └── .env.example            # 环境变量模板
 ```
 
