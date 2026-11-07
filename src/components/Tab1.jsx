@@ -339,13 +339,13 @@ export default function Tab1() {
               className="w-28 text-sm px-3 py-1.5 rounded text-right"
               style={{ backgroundColor: '#C7EDCC', fontFamily: 'Microsoft YaHei' }}
             >
-              超级仓门面：
+              门店门面：
             </label>
             <div className="flex items-center gap-3 flex-1">
               {sampleImages?.superCang && (
                 <img
                   src={sampleImages.superCang}
-                  alt="超级仓门面"
+                  alt="门店门面"
                   className="h-12 rounded border cursor-pointer hover:opacity-80"
                 />
               )}

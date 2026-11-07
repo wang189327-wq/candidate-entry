@@ -200,6 +200,9 @@ if not os.path.isdir(DATA_DIR):
     DATA_DIR = os.path.join(BASE_DIR, "数据")
 IMG_LIBRARY_DIR = os.path.join(DATA_DIR, "SAP图片库")
 FIXED_IMG_DIR = os.path.join(DATA_DIR, "固定图片")
+# 门店门面图：界面文案已更名为「门店门面」，但磁盘文件沿用旧名「超级仓门面.jpg」。
+# 这里同时兼容两种文件名，避免老用户升级后图片丢失。
+STOREFRONT_IMG_NAMES = ("门店门面.jpg", "超级仓门面.jpg")
 SAP_CONFIG_FILE = os.path.join(DATA_DIR, "sap_config.json")
 LAYOUT_CONFIG_FILE = os.path.join(DATA_DIR, "layout_config.json")
 INTEGRATION_FILE = os.path.join(DATA_DIR, "integration_config.json")
@@ -473,7 +476,7 @@ class App(tk.Tk):
         self._make_field(right, "门店名称", 14)
         self._make_img_field(right, "店长手机号", 14, "shop_phone")
         self._make_img_field(right, "常用图片", 14, "common_img")
-        self._make_img_field(right, "超级仓门面", 14, "super_cang_img")
+        self._make_img_field(right, "门店门面", 14, "super_cang_img")
 
         confirm_row = tk.Frame(right, bg="white")
         confirm_row.pack(fill="x", padx=8, pady=(6,8))
@@ -856,12 +859,14 @@ class App(tk.Tk):
             btn.configure(state="normal")
 
     def _load_super_cang_thumb(self):
-        fpath = os.path.join(FIXED_IMG_DIR, "超级仓门面.jpg")
-        if os.path.isfile(fpath):
-            self._super_cang_img_fpath = fpath
-            self._set_thumb_image("super_cang_img", fpath)
-            btn = getattr(self, "_super_cang_img_btn")
-            btn.configure(state="normal")
+        for fname in STOREFRONT_IMG_NAMES:
+            fpath = os.path.join(FIXED_IMG_DIR, fname)
+            if os.path.isfile(fpath):
+                self._super_cang_img_fpath = fpath
+                self._set_thumb_image("super_cang_img", fpath)
+                btn = getattr(self, "_super_cang_img_btn")
+                btn.configure(state="normal")
+                return
 
     def _set_thumb_image(self, attr_name, fpath):
         thumb = getattr(self, f"_{attr_name}_thumb")
@@ -1340,7 +1345,7 @@ class App(tk.Tk):
         self._lib_buttons = []
         self._tk_images.clear()
 
-        # 常用图片 & 超级仓门面（置顶）
+        # 常用图片 & 门店门面（置顶）
         pinned_path = os.path.join(FIXED_IMG_DIR, "1.png")
         hdr = tk.Frame(self._lib_inner, bg=STYLE_BG)
         hdr.pack(fill="x", padx=2, pady=(2, 1))
@@ -1348,8 +1353,13 @@ class App(tk.Tk):
         btn.pack(fill="x", padx=2, pady=1)
         self._lib_buttons.append((btn, pinned_path))
 
-        sc_path = os.path.join(FIXED_IMG_DIR, "超级仓门面.jpg")
-        btn_sc = tk.Button(hdr, text="超级仓门面", bg=STYLE_ENTRY, relief="flat", anchor="w", font=("微软雅黑", 8), justify="left")
+        sc_path = ""
+        for fname in STOREFRONT_IMG_NAMES:
+            candidate = os.path.join(FIXED_IMG_DIR, fname)
+            if os.path.isfile(candidate):
+                sc_path = candidate
+                break
+        btn_sc = tk.Button(hdr, text="门店门面", bg=STYLE_ENTRY, relief="flat", anchor="w", font=("微软雅黑", 8), justify="left")
         btn_sc.configure(command=lambda p=sc_path, b=btn_sc: self._on_lib_item_click(p, b))
         btn_sc.pack(fill="x", padx=2, pady=1)
         self._lib_buttons.append((btn_sc, sc_path))
@@ -1357,7 +1367,7 @@ class App(tk.Tk):
         # 图片库其他图片（序号 + SAP码 + 店铺名称）
         if os.path.isdir(IMG_LIBRARY_DIR):
             try:
-                files = sorted([f for f in os.listdir(IMG_LIBRARY_DIR) if f.lower().endswith((".png",".jpg",".jpeg",".bmp",".gif")) and f not in ("1.png", "超级仓门面.jpg")])
+                files = sorted([f for f in os.listdir(IMG_LIBRARY_DIR) if f.lower().endswith((".png",".jpg",".jpeg",".bmp",".gif")) and f not in ("1.png",) + STOREFRONT_IMG_NAMES])
             except:
                 files = []
             sep = tk.Frame(self._lib_inner, bg="#CCCCCC", height=1)

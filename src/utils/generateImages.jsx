@@ -95,7 +95,7 @@ export function generateCommonImage() {
   return canvasToDataURL(canvas)
 }
 
-// 生成超级仓门面图
+// 生成门店门面图
 export function generateSuperCangImage() {
   const canvas = document.createElement('canvas')
   canvas.width = 480
@@ -128,7 +128,9 @@ export function generateSuperCangImage() {
   ctx.fillRect(80, 90, 320, 40)
   ctx.fillStyle = '#fff'
   ctx.font = 'bold 18px Microsoft YaHei'
-  ctx.fillText('超级仓', 190, 118)
+  ctx.textAlign = 'center' // 招牌以 x=240 为中心，文字居中
+  ctx.fillText('门店门面', 240, 118)
+  ctx.textAlign = 'left'
 
   // 门
   ctx.fillStyle = '#8B6914'

@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest'
 import { parseText, lookupSapByStore, generateSampleText } from './parseText'
 
-// 真实聊天记录结构：BOSS 直聘导出的对话文本
+// 真实聊天记录结构：招聘软件导出的对话文本
 const REAL_CHAT = `张明轩
 的手机号：
 138-0011-2233

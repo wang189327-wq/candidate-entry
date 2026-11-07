@@ -16,7 +16,7 @@ export default function Tab3() {
     // 预设图片（不可删）
     const presets = [
       { key: 'common', label: '常用图片', src: imgs.common },
-      { key: 'superCang', label: '超级仓门面', src: imgs.superCang },
+      { key: 'superCang', label: '门店门面', src: imgs.superCang },
     ]
     for (let i = 1; i <= 6; i++) {
       const k = `SAP00${i}`

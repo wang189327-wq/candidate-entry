@@ -2,7 +2,7 @@
 
 # Candidate Information Entry System
 
-**Recruitment data entry automation: from BOSS Zhipin chat logs to any target system, in one click**
+**Recruitment data entry automation: from job-board chat logs to any target system, in one click**
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
 [![Vercel](https://img.shields.io/badge/Vercel-Alternate-000000?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
@@ -20,7 +20,7 @@
 
 ## 📌 What is this
 
-Built during my HR internship at the instant-retail division of a chain retailer, where recruiters had to manually **copy** candidate info from BOSS Zhipin chats, **look up** store SAP codes from a 400+ entry code library, and **type** everything into a target system (Feishu Base / Supabase / custom webhook / local export) — repetitive copy-paste work, error-prone and slow.
+Built during my HR internship on front-line store recruitment, where recruiters had to manually **copy** candidate info from job-board chats, **look up** store SAP codes from a 400+ entry code library, and **type** everything into a target system (Feishu Base / Supabase / custom webhook / local export) — repetitive copy-paste work, error-prone and slow.
 
 This tool compresses that pipeline into:
 
@@ -42,11 +42,11 @@ Not a one-shot portfolio piece — it went through 6 iterations driven by real b
 
 | Date | Version | Milestone |
 |---|---|---|
-| 2026.05 | Desktop v1.0 → v3.1 | Tkinter 3-tab app: parsing / SAP codes / image library |
-| 2026.06.13 | Desktop v4.0 | Multi-account Feishu management (Tab4), Feishu Base API integration |
-| 2026.06.15 | Web | React + Vite + Tailwind port of the 4-tab UI |
-| 2026.06.16 | Cloud | Supabase: auth + cloud sync for SAP codes / Feishu accounts |
-| 2026.06.22 | Desktop final (2,252 LOC) | Login, user management, team multi-user support |
+| 2026.03 | Desktop v1.0 → v3.1 | Tkinter 3-tab app: parsing / SAP codes / image library |
+| 2026.04.13 | Desktop v4.0 | Multi-account Feishu management (Tab4), Feishu Base API integration |
+| 2026.04.15 | Web | React + Vite + Tailwind port of the 4-tab UI |
+| 2026.05.16 | Cloud | Supabase: auth + cloud sync for SAP codes / Feishu accounts |
+| 2026.05.22 | Desktop final (2,252 LOC) | Login, user management, team multi-user support |
 | 2026.08 | Reliability | Daily 3:00 AM automated full backup (also keeps the free-tier project alive) |
 
 ## ✨ Features
@@ -88,7 +88,7 @@ Parsing and writing are fully decoupled: the parser only produces a standard rec
 
 ```mermaid
 flowchart LR
-    A[BOSS Zhipin<br/>chat log] -->|paste| B(Parsing)
+    A[Job board<br/>chat log] -->|paste| B(Parsing)
     B -->|regex| C[name/phone/WeChat/age/store]
     C -->|store match| D[(store-SAP<br/>mapping)]
     D -->|SAP auto-fill| B
@@ -106,7 +106,7 @@ flowchart LR
 | Client | Stack | Notes |
 |---|---|---|
 | Web | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | [Try it live](https://wang189327-wq.github.io/candidate-entry/) |
-| Desktop | Python Tkinter · Feishu Open API · Pillow · bcrypt | 2,459 LOC, shipped to the recruiting team |
+| Desktop | Python Tkinter · Feishu Open API · Pillow · bcrypt | 2,469 LOC, shipped to the recruiting team |
 
 ### 🌐 Live Deployments
 
@@ -127,7 +127,7 @@ Every push to `main` triggers both pipelines: GitHub Actions runs the build chec
 | Lint | ESLint | react / react-hooks plugins, currently **zero warnings** |
 | Formatting | Prettier | all JS/JSX/JSON, `format:check` runs in CI |
 | Secret scan | custom script | scans all 41 tracked files, blocks on any hit |
-| Desktop syntax | Python AST | full parse of the 2459-line single file |
+| Desktop syntax | Python AST | full parse of the 2469-line single file |
 
 ```bash
 npm run verify    # lint + format:check + test + build in one go

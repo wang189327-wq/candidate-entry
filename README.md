@@ -2,7 +2,7 @@
 
 # 门店求职者信息录入系统
 
-**招聘信息录入自动化：从 BOSS 直聘聊天记录到任意业务系统，一键完成**
+**招聘信息录入自动化：从招聘软件聊天记录到任意业务系统，一键完成**
 
 [![Live Demo](https://img.shields.io/badge/Demo-在线演示-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
 [![Vercel](https://img.shields.io/badge/Vercel-备选入口-000000?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
@@ -20,9 +20,9 @@
 
 ## 📌 这是什么项目
 
-连锁零售企业即时零售业务下的门店招聘场景中，招聘专员每天要做的机械劳动：
+一线门店招聘场景中，招聘专员每天要做的机械劳动：
 
-> 从 BOSS 直聘聊天记录里**复制**求职者姓名、电话、微信、意向门店 → 到 400+ 条 SAP 岗位代码库里**粘贴查找**门店对应代码 → 再**逐字段录入**目标系统（飞书多维表格 / Supabase / 自建 Webhook / 本地导出）
+> 从招聘软件聊天记录里**复制**求职者姓名、电话、微信、意向门店 → 到 400+ 条 SAP 岗位代码库里**粘贴查找**门店对应代码 → 再**逐字段录入**目标系统（飞书多维表格 / Supabase / 自建 Webhook / 本地导出）
 
 一条记录多次复制粘贴，容易录错、效率低。本项目把这条链路压缩成：
 
@@ -44,11 +44,11 @@
 
 | 时间 | 版本 | 关键变化 |
 |---|---|---|
-| 2026.05 | 桌面版 v1.0 → v3.1 | Tkinter 三页签：信息识别 / SAP 代码 / 图片库，布局持久化 |
-| 2026.06.13 | 桌面版 v4.0 | 新增飞书多账号管理（Tab4），直连飞书多维表格 API |
-| 2026.06.15 | Web 版 | React + Vite + Tailwind 复刻四页签，纯前端可交互原型 |
-| 2026.06.16 | 云端化 | 接入 Supabase：登录认证 + SAP 代码 / 飞书账号云端同步 |
-| 2026.06.22 | 桌面终版（2252 行） | 登录窗口、用户管理、账号绑定，团队多人使用 |
+| 2026.03 | 桌面版 v1.0 → v3.1 | Tkinter 三页签：信息识别 / SAP 代码 / 图片库，布局持久化 |
+| 2026.04.13 | 桌面版 v4.0 | 新增飞书多账号管理（Tab4），直连飞书多维表格 API |
+| 2026.04.15 | Web 版 | React + Vite + Tailwind 复刻四页签，纯前端可交互原型 |
+| 2026.05.16 | 云端化 | 接入 Supabase：登录认证 + SAP 代码 / 飞书账号云端同步 |
+| 2026.05.22 | 桌面终版（2252 行） | 登录窗口、用户管理、账号绑定，团队多人使用 |
 | 2026.08 | 数据保障 | Supabase 每日 3:00 自动全量备份（顺带解决了免费层休眠问题） |
 
 ## ✨ 核心功能
@@ -90,7 +90,7 @@
 
 ```mermaid
 flowchart LR
-    A[BOSS直聘<br/>聊天记录] -->|粘贴| B(信息识别)
+    A[招聘软件<br/>聊天记录] -->|粘贴| B(信息识别)
     B -->|正则解析| C[姓名/联系方式/年龄/门店]
     C -->|门店名匹配| D[(门店-SAP<br/>映射表)]
     D -->|SAP自动回填| B
@@ -108,7 +108,7 @@ flowchart LR
 | 端 | 技术栈 | 说明 |
 |---|---|---|
 | Web 版 | React 18 · Vite · Tailwind CSS · Supabase JS · bcryptjs | 在线可玩，[点此体验](https://wang189327-wq.github.io/candidate-entry/) |
-| 桌面版 | Python Tkinter · 飞书 Open API · Pillow · bcrypt | 2459 行，实习期间团队投产版本 |
+| 桌面版 | Python Tkinter · 飞书 Open API · Pillow · bcrypt | 2469 行，实习期间团队投产版本 |
 
 ### 🌐 在线部署
 
@@ -129,7 +129,7 @@ flowchart LR
 | 代码规范 | ESLint | react / react-hooks 插件，当前**零警告** |
 | 格式统一 | Prettier | 全量 JS/JSX/JSON，`format:check` 纳入 CI |
 | 密钥扫描 | 自写脚本 | 41 个文件全量扫描，命中即阻断 |
-| 桌面版语法 | Python AST | 单文件 2459 行全量解析 |
+| 桌面版语法 | Python AST | 单文件 2469 行全量解析 |
 
 ```bash
 npm run verify    # 一键跑完 lint + format:check + test + build
@@ -172,7 +172,7 @@ python 求职者信息录入.py    # 本地模式内置账号 admin / Aa@123456
 │   │   └── supabase.js     #   Supabase 客户端
 │   └── utils/              #   聊天记录解析、示例图片生成
 ├── desktop/                # 桌面版（Python Tkinter，生产版本）
-│   ├── 求职者信息录入.py     #   2459 行单文件应用
+│   ├── 求职者信息录入.py     #   2469 行单文件应用
 │   ├── 数据/                #   配置与示例数据（已脱敏）
 │   └── README.md           #   运行说明与数据文件规范
 ├── docs/images/            # 文档图片
