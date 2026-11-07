@@ -125,8 +125,7 @@ export default function Tab1() {
   }
 
   function handleFillSample() {
-    const store = '广州正佳广场店'
-    const sample = generateSampleText(store)
+    const sample = generateSampleText()
     setRawText(sample)
     applyParse(sample)
   }
@@ -172,7 +171,7 @@ export default function Tab1() {
           className="flex-1 p-3 text-sm resize-none outline-none border-0 focus:ring-0"
           style={{ fontFamily: 'Microsoft YaHei', minHeight: 280 }}
           placeholder={
-            '粘贴候选人聊天记录，例如：\n门店名称\n的手机号：\n138-0000-0000\n复制手机号\n的微信号：\nwxid_xxx\n年龄：\n24 岁\n沟通职位：\n企划实习生（广州正佳广场店）'
+            '粘贴候选人聊天记录，例如：\n李小明\n的手机号：\n13800000000\n复制手机号\n的微信号：\nlxm_demo000\n复制微信号\n年龄：\n25 岁\n沟通职位：\n拣货员（广州正佳广场门店）'
           }
           value={rawText}
           onChange={(e) => setRawText(e.target.value)}

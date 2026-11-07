@@ -195,14 +195,22 @@ describe('lookupSapByStore', () => {
 
 describe('generateSampleText', () => {
   it('生成的示例文本可被 parseText 正确解析', () => {
-    const text = generateSampleText('广州正佳店')
+    const text = generateSampleText()
     const r = parseText(text)
-    expect(r['门店名称']).toBe('广州正佳店')
+    expect(r['姓名']).toBe('李小明')
+    expect(r['门店名称']).toBe('广州正佳广场门店')
     expect(r['年龄']).toBe('25')
-    expect(r['联系方式']).toContain('138-0011-2233')
+    expect(r['联系方式']).toBe('手机号13800000000/微信号lxm_demo000')
   })
 
   it('示例文本包含指定门店名', () => {
-    expect(generateSampleText('上海环球港店')).toContain('上海环球港店')
+    expect(generateSampleText()).toContain('广州正佳广场门店')
+  })
+
+  it('支持覆盖任意字段', () => {
+    const text = generateSampleText({ name: '王小明', store: '深圳万象城店' })
+    const r = parseText(text)
+    expect(r['姓名']).toBe('王小明')
+    expect(r['门店名称']).toBe('深圳万象城店')
   })
 })

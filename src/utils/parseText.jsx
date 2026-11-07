@@ -89,7 +89,20 @@ export function lookupSapByStore(storeName, sapConfig) {
   return ''
 }
 
+// 示例候选人（用于 Demo「填充示例」按钮）
+export const SAMPLE_CANDIDATE = {
+  name: '李小明',
+  phone: '13800000000',
+  wechat: 'lxm_demo000',
+  age: '25 岁',
+  position: '拣货员',
+  store: '广州正佳广场门店',
+}
+
 // 生成示例聊天记录（用于 Demo）
-export function generateSampleText(storeName) {
-  return `${storeName}\n的手机号：\n138-0011-2233\n复制手机号\n的微信号：\nwxid_demo001\n复制微信号\n年龄：\n25 岁\n沟通职位：\n企划实习生（${storeName}）`
+// 结构与真实粘贴文本一致：首行是候选人姓名，随后是「X的手机号：/ 值 / 复制手机号」三行块，
+// 最后「沟通职位：」后跟「岗位（门店）」，门店由括号内文本解析得出。
+export function generateSampleText(overrides = {}) {
+  const { name, phone, wechat, age, position, store } = { ...SAMPLE_CANDIDATE, ...overrides }
+  return `${name}\n的手机号：\n${phone}\n复制手机号\n的微信号：\n${wechat}\n复制微信号\n年龄：\n${age}\n沟通职位：\n${position}（${store}）`
 }
