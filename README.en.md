@@ -2,7 +2,7 @@
 
 # Candidate Information Entry System
 
-**Recruitment data entry automation: from BOSS Zhipin chat logs to Feishu (Lark) Base, in one click**
+**Recruitment data entry automation: from BOSS Zhipin chat logs to any target system, in one click**
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live-4FC08D?logo=github)](https://wang189327-wq.github.io/candidate-entry/)
 [![Vercel](https://img.shields.io/badge/Vercel-mirror-black?logo=vercel)](https://portfolio-web-wine-nine.vercel.app)
@@ -20,11 +20,11 @@
 
 ## 📌 What is this
 
-Built during my HR internship at the instant-retail division of a chain retailer, where recruiters had to manually **copy** candidate info from BOSS Zhipin chats, **look up** store SAP codes from a 400+ entry code library, and **type** everything into Feishu Base — repetitive copy-paste work, error-prone and slow.
+Built during my HR internship at the instant-retail division of a chain retailer, where recruiters had to manually **copy** candidate info from BOSS Zhipin chats, **look up** store SAP codes from a 400+ entry code library, and **type** everything into a target system (Feishu Base / Supabase / custom webhook / local export) — repetitive copy-paste work, error-prone and slow.
 
 This tool compresses that pipeline into:
 
-> **Paste chat log → auto-parse → SAP auto-matching → one-click write to Feishu**
+> **Paste chat log → auto-parse → SAP auto-matching → one-click write** (pluggable targets: Supabase / Feishu / Webhook / local export)
 
 The desktop version was used in production by the recruiting team; the web version later added cloud sync via Supabase.
 
