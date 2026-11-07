@@ -28,7 +28,7 @@ jobs:
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: 安装依赖
@@ -49,10 +49,12 @@ jobs:
       - name: 构建
         run: npm run build
 
-      - name: Python 语法校验（桌面版）
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Python 语法校验（桌面版）
         run: |
           python - <<'PY'
           import ast, pathlib
@@ -74,6 +76,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: 安装 PyYAML（供工作流配置校验使用）
+        run: pip install pyyaml
+
+      - name: 校验 GitHub Actions 工作流配置
+        run: python scripts/validate_workflows.py
 
       - name: 扫描硬编码凭证
         run: python scripts/secret_scan.py

@@ -138,6 +138,7 @@ Every push to `main` triggers both pipelines: GitHub Actions runs the build chec
 | Formatting | Prettier | all JS/JSX/JSON, `format:check` runs in CI |
 | Secret scan | custom script | scans all 73 tracked files, blocks on any hit |
 | Dependency audit | npm audit | production deps only, high-severity issues block CI |
+| Workflow validation | custom script | checks Actions schema locally, so a malformed workflow fails fast |
 | Desktop syntax | Python AST | full parse of the 2469-line single file |
 
 ```bash
