@@ -1,0 +1,9 @@
+[
+  {
+    "alias": "我的飞书应用（示例）",
+    "app_id": "cli_xxxxxxxxxxxxxxxx",
+    "app_secret": "your_app_secret_here",
+    "app_token": "your_bitable_app_token_here",
+    "active": true
+  }
+]
