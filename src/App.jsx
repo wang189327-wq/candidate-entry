@@ -23,6 +23,17 @@ export default function App() {
     setLoading(false)
   }, [])
 
+  // 判断是否「RPC 未部署」：只有函数缺失才回退旧链路（拉哈希到本地比对）。
+  // 应用 supabase/migrations 后旧链路自然退役，密码哈希不再出库。
+  function isRpcMissing(error) {
+    const msg = String(error?.message || error || '')
+    return (
+      msg.includes('Could not find the function') ||
+      msg.includes('function public.verify_login') ||
+      (error?.code === 'PGRST202' && msg.includes('verify_login'))
+    )
+  }
+
   async function handleLogin(e) {
     e.preventDefault()
     const username = e.target.username.value.trim()
@@ -30,6 +41,33 @@ export default function App() {
     if (!username || !password) return
 
     setLoginError('')
+
+    // 首选：服务端校验（verify_login RPC），密码不出库
+    const { data: rpcData, error: rpcError } = await sb.rpc('verify_login', {
+      p_username: username,
+      p_password: password,
+    })
+
+    if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+      const u = rpcData[0]
+      const userInfo = { id: u.id, username: u.username, role: u.role }
+      localStorage.setItem('portfolio_user', JSON.stringify(userInfo))
+      setUser(userInfo)
+      return
+    }
+
+    // RPC 存在但校验未通过（空结果）→ 凭证错误，不回退
+    if (!rpcError) {
+      setLoginError('账号或密码错误')
+      return
+    }
+
+    // RPC 未部署 → 回退旧链路（本地 bcrypt 比对）
+    if (!isRpcMissing(rpcError)) {
+      setLoginError('登录服务异常：' + rpcError.message)
+      return
+    }
+
     const { data, error } = await sb.from('program_users').select('*').eq('username', username).maybeSingle()
 
     if (error || !data) {

@@ -20,6 +20,8 @@ const NAME_IN_LABEL = /^(.{2,20}?)的(?:手机号|微信号)\s*[：:]/
 // 以下形态都不可能是姓名
 const AGE_VALUE = /^\d{1,3}\s*岁$/
 const PAREN_VALUE = /[（(][^）)]*[）)]/
+// 联系方式块：「X的手机号：」标签行，冒号后可能带值（一行到底），也可能值在下一行
+const CONTACT_BLOCK = /^(.{0,20}?)的(手机号|微信号)\s*[：:]\s*(.*)$/
 
 function looksLikeContact(line) {
   if (PHONE_LIKE.test(line)) return true
@@ -44,22 +46,38 @@ function isValueLine(line) {
 
 export function parseText(text) {
   if (!text || !String(text).trim()) return null
-  const lines = String(text)
+  // 统一换行：Windows 剪贴板常带 \r\n，若不归一化，\r 会污染各字段的值
+  const raw = String(text).replace(/\r\n?/g, '\n')
+  const lines = raw
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean)
 
   const data = {}
-  // 手机号 / 微信号：按3行块解析
+
+  // 手机号 / 微信号：按块解析。
+  // 块的组成是「标签行 [值行] [复制行]」，其中值行和复制行都可能缺失 ——
+  // 不能固定跳 3 行（会吞掉下一个块），也不能把「复制手机号」当字段值。
   let i = 0
   while (i < lines.length) {
     const line = lines[i]
-    if (line.includes('的手机号：')) {
-      if (i + 1 < lines.length) data._phone_block = lines[i + 1]
-      i += 3
-    } else if (line.includes('的微信号：')) {
-      if (i + 1 < lines.length) data._wechat_block = lines[i + 1]
-      i += 3
+    const block = line.match(CONTACT_BLOCK)
+    if (block) {
+      let value = block[3].trim()
+      let j = i + 1
+      if (!value && j < lines.length) {
+        const next = lines[j]
+        const isCopyLine = next === '复制手机号' || next === '复制微信号'
+        const isLabelLine = LABEL_LINE.test(next) || UI_TEXT.has(next)
+        if (!isCopyLine && !isLabelLine) {
+          value = next
+          j++
+        }
+      }
+      // 值行之后若紧跟「复制手机号 / 复制微信号」，一并跳过
+      if (j < lines.length && (lines[j] === '复制手机号' || lines[j] === '复制微信号')) j++
+      if (value) data[block[2] === '手机号' ? '_phone_block' : '_wechat_block'] = value
+      i = j
     } else {
       i++
     }
@@ -71,8 +89,8 @@ export function parseText(text) {
   if (data._wechat_block) contactParts.push(`微信号${data._wechat_block}`)
   if (contactParts.length) data['联系方式'] = contactParts.join('/')
 
-  // 年龄
-  const ageMatch = String(text).match(/(\d{1,3})\s*岁/)
+  // 年龄：优先取「年龄：」标签上下文，避免误抓正文中无关的「N 岁」
+  const ageMatch = raw.match(/年龄\s*[：:]\s*(\d{1,3})\s*岁/) || raw.match(/(\d{1,3})\s*岁/)
   if (ageMatch) data['年龄'] = ageMatch[1]
 
   // 姓名：先按「结构」定位，再按「内容」复核。
@@ -112,11 +130,11 @@ export function parseText(text) {
     }
   }
 
-  // 门店名称：从「沟通职位」字段提取
-  const storeMatch = String(text).match(/沟通职位[：:]\s*(.+?)(?=\n|$)/)
+  // 门店名称：从「沟通职位」字段提取（全角/半角括号都支持）
+  const storeMatch = raw.match(/沟通职位\s*[：:]\s*(.+?)(?=\n|$)/)
   if (storeMatch) {
     const jobText = storeMatch[1].trim()
-    const storeInParens = jobText.match(/（([^）]+)）/)
+    const storeInParens = jobText.match(/[（(]([^（）()]+)[）)]/)
     if (storeInParens) data['门店名称'] = storeInParens[1]
   }
 
@@ -130,14 +148,18 @@ export function parseText(text) {
   return Object.keys(result).length > 0 ? result : null
 }
 
-// 根据门店名称查 SAP 代码
+// 根据门店名称查 SAP 代码。
+// 兼容两种维护口径（都做精确匹配，避免「广州」误配「广州正佳广场门店」）：
+//   1. 岗位名称括号里的门店 —— 如「拣货员（广州正佳广场门店）」，桌面版与示例数据的主要写法
+//   2. sap_codes.store_name 列 —— Tab2 表单维护的门店/城市字段，Web 版的独立列
 export function lookupSapByStore(storeName, sapConfig) {
   if (!storeName) return ''
   for (const [pos, cfg] of Object.entries(sapConfig)) {
-    const storeInParens = pos.match(/（([^）]+)）/)
-    if (storeInParens && storeInParens[1] === storeName) {
-      return typeof cfg === 'string' ? cfg : cfg.sap
-    }
+    const sap = typeof cfg === 'string' ? cfg : cfg?.sap
+    if (!sap) continue
+    const storeInParens = pos.match(/[（(]([^（）()]+)[）)]/)
+    if (storeInParens && storeInParens[1] === storeName) return sap
+    if (typeof cfg === 'object' && cfg.city === storeName) return sap
   }
   return ''
 }

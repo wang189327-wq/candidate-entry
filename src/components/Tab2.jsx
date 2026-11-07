@@ -60,30 +60,19 @@ export default function Tab2() {
       return
     }
 
-    if (editingKey && editingKey !== form.pos) {
-      // delete old key
-      const oldEntry = sapConfig[editingKey]
-      if (oldEntry && oldEntry._id) {
-        await sb.from('sap_codes').delete().eq('id', oldEntry._id)
+    try {
+      if (editingKey && editingKey !== form.pos) {
+        // 岗位名改了：先删旧记录
+        const oldEntry = sapConfig[editingKey]
+        if (oldEntry && oldEntry._id) {
+          const { error: delError } = await sb.from('sap_codes').delete().eq('id', oldEntry._id)
+          if (delError) throw delError
+        }
       }
-    }
 
-    if (editingKey && editingKey === form.pos) {
-      // update
-      await sb
-        .from('sap_codes')
-        .update({
-          sap_code: form.sap,
-          store_name: form.city,
-          published: form.published,
-          note: form.note,
-        })
-        .eq('id', sapConfig[editingKey]._id)
-    } else {
-      // insert
-      const oldEntry = sapConfig[form.pos]
-      if (oldEntry && oldEntry._id) {
-        await sb
+      if (editingKey && editingKey === form.pos) {
+        // 编辑：更新原记录
+        const { error: updError } = await sb
           .from('sap_codes')
           .update({
             sap_code: form.sap,
@@ -91,16 +80,36 @@ export default function Tab2() {
             published: form.published,
             note: form.note,
           })
-          .eq('id', oldEntry._id)
+          .eq('id', sapConfig[editingKey]._id)
+        if (updError) throw updError
       } else {
-        await sb.from('sap_codes').insert({
-          position_name: form.pos,
-          sap_code: form.sap,
-          store_name: form.city,
-          published: form.published,
-          note: form.note,
-        })
+        // 新增：同岗位名已存在则覆盖，否则插入
+        const oldEntry = sapConfig[form.pos]
+        if (oldEntry && oldEntry._id) {
+          const { error: updError } = await sb
+            .from('sap_codes')
+            .update({
+              sap_code: form.sap,
+              store_name: form.city,
+              published: form.published,
+              note: form.note,
+            })
+            .eq('id', oldEntry._id)
+          if (updError) throw updError
+        } else {
+          const { error: insError } = await sb.from('sap_codes').insert({
+            position_name: form.pos,
+            sap_code: form.sap,
+            store_name: form.city,
+            published: form.published,
+            note: form.note,
+          })
+          if (insError) throw insError
+        }
       }
+    } catch (e) {
+      alert('保存失败：' + (e?.message || e))
+      return
     }
 
     await loadData()
@@ -112,7 +121,11 @@ export default function Tab2() {
     if (!confirm(`确定要删除岗位「${key}」吗？`)) return
     const entry = sapConfig[key]
     if (entry && entry._id) {
-      await sb.from('sap_codes').delete().eq('id', entry._id)
+      const { error } = await sb.from('sap_codes').delete().eq('id', entry._id)
+      if (error) {
+        alert('删除失败：' + error.message)
+        return
+      }
     }
     await loadData()
     if (editingKey === key) {
@@ -249,7 +262,7 @@ export default function Tab2() {
           <button
             onClick={handleAddOrUpdate}
             className="flex-1 py-1.5 rounded text-sm font-medium text-white transition hover:scale-[1.02]"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             {editingKey ? '保存修改' : '添加/保存'}
           </button>
@@ -259,7 +272,7 @@ export default function Tab2() {
               setForm({ city: '', pos: '', sap: '', note: '', published: '是' })
             }}
             className="px-4 py-1.5 rounded text-sm font-medium text-white transition"
-            style={{ backgroundColor: '#FFCCCC' }}
+            style={{ backgroundColor: '#FFCCCC', color: '#9B2C2C' }}
           >
             重置
           </button>

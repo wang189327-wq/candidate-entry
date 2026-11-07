@@ -137,7 +137,7 @@ export default function Tab5() {
           <button
             onClick={handleSave}
             className="px-6 py-2 rounded text-sm font-medium text-white transition hover:scale-[1.02]"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             保存配置
           </button>

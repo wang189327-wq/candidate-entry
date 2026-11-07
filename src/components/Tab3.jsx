@@ -128,7 +128,7 @@ export default function Tab3() {
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="text-xs px-2 py-0.5 rounded text-white disabled:opacity-50"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             {uploading ? '上传中…' : '上传'}
           </button>
@@ -219,14 +219,14 @@ export default function Tab3() {
           <button
             onClick={() => selected && navigator.clipboard.writeText(selected.key)}
             className="px-4 py-1.5 rounded text-xs text-white transition hover:scale-[1.02]"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             复制路径
           </button>
           <button
             onClick={() => selected && navigator.clipboard.writeText(selected.src)}
             className="px-4 py-1.5 rounded text-xs text-white transition hover:scale-[1.02]"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             复制图片
           </button>
@@ -234,7 +234,7 @@ export default function Tab3() {
             <button
               onClick={() => selected && handleDelete(selected.key)}
               className="px-4 py-1.5 rounded text-xs text-white transition"
-              style={{ backgroundColor: '#FFCCCC' }}
+              style={{ backgroundColor: '#FFCCCC', color: '#9B2C2C' }}
             >
               删除
             </button>

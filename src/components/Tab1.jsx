@@ -11,12 +11,15 @@ export default function Tab1() {
     姓名: '',
     联系方式: '',
     年龄: '',
-    性别: '女',
+    // 不设默认值：静默写入「女」会把错误性别带进业务系统，改为写入前强制选择
+    性别: '',
     SAP代码: '',
     意向岗位: '全职',
     门店名称: '',
   })
   const [sampleImages, setSampleImages] = useState(null)
+  // 云端图片库（Tab3 上传的门店手机号截图，按 SAP 代码关联）
+  const [cloudImages, setCloudImages] = useState({})
   const [writeStatus, setWriteStatus] = useState('idle') // idle | loading | success | error
   const [sapConfig, setSapConfig] = useState({})
   const [candidates, setCandidates] = useState([])
@@ -29,6 +32,7 @@ export default function Tab1() {
     setSampleImages(generateAllSampleImages())
     loadSapConfig()
     loadCandidates()
+    loadCloudImages()
   }, [])
 
   // 「接入配置」中切换写入目标后，实时同步按钮文案与底部提示
@@ -55,6 +59,18 @@ export default function Tab1() {
   async function loadCandidates() {
     const { data } = await sb.from('candidates').select('*').order('created_at', { ascending: false })
     if (data) setCandidates(data)
+  }
+
+  // 云端图片库：读取 Tab3 上传的图片，按 SAP 代码建立索引（同名取最新一条在前）
+  async function loadCloudImages() {
+    const { data } = await sb.from('images').select('id, name, url, sap_code')
+    if (data) {
+      const mapped = {}
+      data.forEach((img) => {
+        if (img.sap_code && img.url && !mapped[img.sap_code]) mapped[img.sap_code] = img.url
+      })
+      setCloudImages(mapped)
+    }
   }
 
   // 解析并回填字段（文本由调用方传入，避免依赖尚未提交的 state）
@@ -88,12 +104,16 @@ export default function Tab1() {
 
   function handleClear() {
     setRawText('')
-    setFields({ 姓名: '', 联系方式: '', 年龄: '', 性别: '女', SAP代码: '', 意向岗位: '全职', 门店名称: '' })
+    setFields({ 姓名: '', 联系方式: '', 年龄: '', 性别: '', SAP代码: '', 意向岗位: '全职', 门店名称: '' })
   }
 
   async function handleWriteFeishu() {
     if (!fields.姓名.trim()) {
       alert('请填写姓名')
+      return
+    }
+    if (!fields['性别']) {
+      alert('请选择性别')
       return
     }
     setWriteStatus('loading')
@@ -134,7 +154,11 @@ export default function Tab1() {
   const ageNum = parseInt(ageVal)
   const ageColor = ageNum >= 18 && ageNum <= 40 ? 'text-green-600' : 'text-red-500'
 
-  const shopPhoneImg = fields['SAP代码'] && sampleImages ? sampleImages[fields['SAP代码']] : null
+  // 店长手机号图：优先用云端图片库（Tab3 上传）按 SAP 代码关联的真实截图，
+  // 没有上传过时回退到内置示例图
+  const shopPhoneImg = fields['SAP代码']
+    ? cloudImages[fields['SAP代码']] || sampleImages?.[fields['SAP代码']] || null
+    : null
 
   return (
     <div className="flex gap-4 p-4 h-full" style={{ minHeight: 'calc(100vh - 110px)' }}>
@@ -180,7 +204,7 @@ export default function Tab1() {
           <button
             onClick={handleParse}
             className="px-6 py-2 rounded text-sm font-medium transition hover:scale-[1.02] text-white"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             识别候选人
           </button>
@@ -193,7 +217,7 @@ export default function Tab1() {
           <button
             onClick={() => setRawText('')}
             className="px-5 py-2 rounded text-sm font-medium transition hover:scale-[1.02] text-white"
-            style={{ backgroundColor: '#FFCCCC' }}
+            style={{ backgroundColor: '#FFCCCC', color: '#9B2C2C' }}
           >
             取消
           </button>
@@ -362,7 +386,7 @@ export default function Tab1() {
             onClick={handleWriteFeishu}
             disabled={writeStatus === 'loading' || writeStatus === 'success'}
             className={`px-6 py-2 rounded text-sm font-medium transition text-white ${writeStatus === 'success' ? 'bg-green-400' : 'hover:scale-[1.02]'}`}
-            style={{ backgroundColor: writeStatus === 'success' ? '#4ade80' : '#A8D4A8' }}
+            style={{ backgroundColor: writeStatus === 'success' ? '#4ade80' : '#A8D4A8', color: '#22543D' }}
           >
             {writeStatus === 'loading'
               ? '写入中...'
@@ -373,7 +397,7 @@ export default function Tab1() {
           <button
             onClick={handleClear}
             className="px-5 py-2 rounded text-sm font-medium transition hover:scale-[1.02] text-white"
-            style={{ backgroundColor: '#FFCCCC' }}
+            style={{ backgroundColor: '#FFCCCC', color: '#9B2C2C' }}
           >
             清空
           </button>

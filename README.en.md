@@ -133,7 +133,7 @@ Every push to `main` triggers both pipelines: GitHub Actions runs the build chec
 
 | Stage | Tool | Coverage |
 |---|---|---|
-| Unit tests | Vitest | 80 tests: parser 40 · adapter contract 17 · HTTP wrapper 12 · CSV escaping 11 |
+| Unit tests | Vitest | 97 tests: parser 50 · adapter contract 17 · integration config 7 · HTTP wrapper 12 · CSV escaping 11 |
 | Lint | ESLint | react / react-hooks plugins, currently **zero warnings** |
 | Formatting | Prettier | all JS/JSX/JSON, `format:check` runs in CI |
 | Secret scan | custom script | scans all 73 tracked files, blocks on any hit |

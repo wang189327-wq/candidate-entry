@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { sb } from '../lib/supabase'
 import bcrypt from 'bcryptjs'
 
-const ADMIN_VERIFY_CODE = '118814'
+// 过渡期回退值：应用 supabase/migrations 的 verify_admin RPC 后不再使用。
+// 可通过构建变量 VITE_ADMIN_VERIFY_CODE 覆盖。
+const ADMIN_VERIFY_CODE = import.meta.env.VITE_ADMIN_VERIFY_CODE || '118814'
 const ADMIN_USERNAME = 'admin'
 
 export default function Tab4() {
@@ -90,7 +92,7 @@ export default function Tab4() {
     }
   }
 
-  // 实际执行保存
+  // 实际执行保存：所有写操作逐一检查 error，失败立即中断并提示
   async function doSave(f, isNew) {
     try {
       if (isNew) {
@@ -99,7 +101,7 @@ export default function Tab4() {
           alert('新增账号需要设置密码')
           return
         }
-        const { data: ins } = await sb
+        const { data: ins, error: insError } = await sb
           .from('feishu_accounts')
           .insert({
             alias: f.alias,
@@ -108,18 +110,20 @@ export default function Tab4() {
             app_token_key: f.app_token_key,
           })
           .select()
+        if (insError) throw insError
         if (ins?.[0]) {
           const hash = await bcrypt.hash(f.password, 10)
-          await sb.from('program_users').insert({
+          const { error: userError } = await sb.from('program_users').insert({
             username: f.alias,
             password_hash: hash,
             role: 'guest',
           })
+          if (userError) throw userError
         }
       } else {
         // 编辑：更新 feishu_accounts
         const acc = accounts[selectedIdx]
-        await sb
+        const { error: accError } = await sb
           .from('feishu_accounts')
           .update({
             alias: f.alias,
@@ -128,24 +132,45 @@ export default function Tab4() {
             app_token_key: f.app_token_key,
           })
           .eq('id', acc.id)
+        if (accError) throw accError
 
         // 如果改了用户名，同步更新 program_users
         if (f.alias !== acc.alias) {
-          const { data: users } = await sb.from('program_users').select('*').eq('username', acc.alias)
+          const { data: users, error: findError } = await sb
+            .from('program_users')
+            .select('id, username, role')
+            .eq('username', acc.alias)
+          if (findError) throw findError
           if (users?.[0]) {
             if (f.password) {
               const hash = await bcrypt.hash(f.password, 10)
-              await sb.from('program_users').update({ username: f.alias, password_hash: hash }).eq('id', users[0].id)
+              const { error: updError } = await sb
+                .from('program_users')
+                .update({ username: f.alias, password_hash: hash })
+                .eq('id', users[0].id)
+              if (updError) throw updError
             } else {
-              await sb.from('program_users').update({ username: f.alias }).eq('id', users[0].id)
+              const { error: updError } = await sb
+                .from('program_users')
+                .update({ username: f.alias })
+                .eq('id', users[0].id)
+              if (updError) throw updError
             }
           }
         } else if (f.password) {
           // 没改用户名但改了密码
-          const { data: users } = await sb.from('program_users').select('*').eq('username', f.alias)
+          const { data: users, error: findError } = await sb
+            .from('program_users')
+            .select('id, username, role')
+            .eq('username', f.alias)
+          if (findError) throw findError
           if (users?.[0]) {
             const hash = await bcrypt.hash(f.password, 10)
-            await sb.from('program_users').update({ password_hash: hash }).eq('id', users[0].id)
+            const { error: updError } = await sb
+              .from('program_users')
+              .update({ password_hash: hash })
+              .eq('id', users[0].id)
+            if (updError) throw updError
           }
         }
       }
@@ -155,7 +180,7 @@ export default function Tab4() {
       setForm({ alias: '', app_id_key: '', app_secret_key: '', app_token_key: '', password: '' })
       alert('保存成功')
     } catch (e) {
-      alert('保存失败：' + e.message)
+      alert('保存失败：' + (e?.message || e))
     }
   }
 
@@ -176,23 +201,43 @@ export default function Tab4() {
 
   async function doDelete(acc) {
     try {
-      // 从 program_users 删除
-      const { data: users } = await sb.from('program_users').select('*').eq('username', acc.alias)
-      if (users?.[0]) await sb.from('program_users').delete().eq('id', users[0].id)
+      // 从 program_users 删除（显式列，不拉取密码哈希）
+      const { data: users, error: findError } = await sb
+        .from('program_users')
+        .select('id, username, role')
+        .eq('username', acc.alias)
+      if (findError) throw findError
+      if (users?.[0]) {
+        const { error: delUser } = await sb.from('program_users').delete().eq('id', users[0].id)
+        if (delUser) throw delUser
+      }
       // 从 feishu_accounts 删除
-      await sb.from('feishu_accounts').delete().eq('id', acc.id)
+      const { error: delAcc } = await sb.from('feishu_accounts').delete().eq('id', acc.id)
+      if (delAcc) throw delAcc
       await loadAccounts()
       setSelectedIdx(null)
       setForm({ alias: '', app_id_key: '', app_secret_key: '', app_token_key: '', password: '' })
       alert('删除成功')
     } catch (e) {
-      alert('删除失败：' + e.message)
+      alert('删除失败：' + (e?.message || e))
     }
   }
 
-  // 验证弹窗提交
-  function handleVerifySubmit() {
-    if (verifyCode.trim() !== ADMIN_VERIFY_CODE) {
+  // 验证弹窗提交：优先服务端校验（verify_admin RPC），未部署时回退本地比对
+  async function handleVerifySubmit() {
+    const code = verifyCode.trim()
+    if (!code) {
+      alert('请输入验证码')
+      return
+    }
+    const { data: ok, error } = await sb.rpc('verify_admin', { p_code: code })
+    if (!error) {
+      if (!ok) {
+        alert('验证码错误')
+        return
+      }
+    } else if (code !== ADMIN_VERIFY_CODE) {
+      // RPC 未部署（或调用异常）→ 过渡期本地比对
       alert('验证码错误')
       return
     }
@@ -215,7 +260,7 @@ export default function Tab4() {
             <button
               onClick={handleAdd}
               className="text-xs px-3 py-1 rounded text-white"
-              style={{ backgroundColor: '#A8D4A8' }}
+              style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
             >
               + 新增账号
             </button>
@@ -350,7 +395,7 @@ export default function Tab4() {
           <button
             onClick={handleSave}
             className="px-6 py-2 rounded text-sm text-white"
-            style={{ backgroundColor: '#A8D4A8' }}
+            style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
           >
             保存
           </button>
@@ -359,7 +404,7 @@ export default function Tab4() {
               <button
                 onClick={handleDelete}
                 className="px-6 py-2 rounded text-sm text-white"
-                style={{ backgroundColor: '#FFCCCC', color: '#c00' }}
+                style={{ backgroundColor: '#FFCCCC', color: '#9B2C2C' }}
               >
                 删除
               </button>
@@ -382,13 +427,13 @@ export default function Tab4() {
               onChange={(e) => setVerifyCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleVerifySubmit()}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-4 focus:outline-none focus:border-purple"
-              placeholder="输入验证码：118814"
+              placeholder="输入管理员验证码"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleVerifySubmit}
                 className="flex-1 py-2 rounded text-sm text-white font-medium"
-                style={{ backgroundColor: '#A8D4A8' }}
+                style={{ backgroundColor: '#A8D4A8', color: '#22543D' }}
               >
                 确认
               </button>

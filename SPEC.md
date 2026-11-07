@@ -108,7 +108,7 @@ Web 版（React）在其基础上增加了云端同步与可配置的写入目�
 
 - 左侧选择写入目标系统，右侧动态配置表单
 - 「测试连接」连通性校验
-- 「保存配置」写入 localStorage 并广播 `integration-changed` 事件，Tab1 实时生效
+- 「保存配置」写入 localStorage（`{ adapterId, configs: { 目标id: 参数 } }`，各目标参数彼此隔离、互不覆盖，旧版单配置结构自动迁移）并广播 `integration-changed` 事件，Tab1 实时生效
 
 ### 3.4 适配器契约
 

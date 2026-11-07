@@ -115,10 +115,10 @@ flowchart LR
 
 | 环节 | 工具 | 覆盖范围 |
 |---|---|---|
-| 单元测试 | Vitest | 80 项：解析层 40 · 适配器契约 17 · HTTP 封装 12 · CSV 转义 11 |
+| 单元测试 | Vitest | 97 项：解析层 50 · 适配器契约 17 · 接入配置隔离 7 · HTTP 封装 12 · CSV 转义 11 |
 | 代码规范 | ESLint | react / react-hooks / jsx-a11y 插件，当前**零错误零警告** |
 | 格式统一 | Prettier | 全量 JS/JSX/JSON，`format:check` 纳入 CI |
-| 密钥扫描 | 自写脚本 | 73 个文件全量扫描，命中即阻断 |
+| 密钥扫描 | 自写脚本 | 77 个文件全量扫描，命中即阻断 |
 | 依赖审计 | npm audit | 仅审计生产依赖，高危漏洞阻断 CI |
 | 工作流校验 | 自写脚本 | 校验 Actions schema 合法性，配置写错在本地就报错 |
 | 桌面版语法 | Python AST | 单文件 2469 行全量解析 |
@@ -168,6 +168,7 @@ python 求职者信息录入.py    # 本地模式内置账号 admin / Aa@123456
 │   ├── 数据/                #   配置与示例数据（已脱敏）
 │   └── README.md           #   运行说明与数据文件规范
 ├── docs/images/            # 文档图片
+├── supabase/migrations/    # 云端安全加固 SQL（服务端登录校验 / 验证码 / 列级权限）
 ├── .github/workflows/      # CI：构建校验 + 密钥扫描
 ├── CHANGELOG.md            # 更新日志
 ├── SPEC.md                 # 技术规格（架构 / 适配器契约 / 工程化）
@@ -180,6 +181,7 @@ python 求职者信息录入.py    # 本地模式内置账号 admin / Aa@123456
 - 门店联系方式截图等真实业务素材**不随仓库分发**
 - `sap_config.json`、`feishu_accounts.json` 均为示例数据，生产数据在团队内网环境
 - 线上演示用的 Supabase 库同样只保留示例数据（SAP 代码 1 条），完整的 400+ 条门店岗位代码库在生产环境
+- 登录与管理员验证码支持服务端 RPC 校验（[`supabase/migrations`](./supabase/migrations/20261108_security_hardening.sql)，密码哈希不出库；未执行迁移时自动回退兼容）
 - 在线演示站的权限判定在前端完成，便于体验；**请勿在演示站输入真实候选人信息或真实业务凭证**，生产部署前的加固清单见 [SECURITY.md](./SECURITY.md)
 
 ## 📄 License

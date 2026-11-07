@@ -17,25 +17,48 @@ export function getAdapter(id) {
   return ADAPTERS.find((a) => a.id === id) || ADAPTERS.find((a) => a.id === DEFAULT_ADAPTER_ID)
 }
 
-// 读取当前生效的接入配置（适配器 id + 该适配器的参数）
-export function loadIntegration() {
+// localStorage 存储结构：{ adapterId: 当前生效目标, configs: { 目标id: 该目标的参数 } }
+// 每个目标的参数彼此隔离 —— 切换目标再切回来，之前填的参数还在；
+// 保存一个目标的参数也不会覆盖其他目标（旧版单配置结构会互相冲掉）。
+function readAll() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { adapterId: DEFAULT_ADAPTER_ID, config: {} }
+    if (!raw) return {}
     const saved = JSON.parse(raw)
-    return {
-      adapterId: saved.adapterId || DEFAULT_ADAPTER_ID,
-      config: saved.config || {},
+    if (!saved || typeof saved !== 'object') return {}
+    // 兼容旧版单配置结构 { adapterId, config } → 迁移为按目标隔离的 configs
+    if (!saved.configs && saved.config && typeof saved.config === 'object') {
+      saved.configs = { [saved.adapterId || DEFAULT_ADAPTER_ID]: saved.config }
     }
+    return saved
   } catch {
-    return { adapterId: DEFAULT_ADAPTER_ID, config: {} }
+    return {}
+  }
+}
+
+function writeAll(all) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
+}
+
+// 读取当前生效的接入配置（适配器 id + 该适配器自己的参数）
+export function loadIntegration() {
+  const all = readAll()
+  const adapterId = getAdapter(all.adapterId).id
+  return {
+    adapterId,
+    config: all.configs?.[adapterId] || {},
   }
 }
 
 export function saveIntegration(adapterId, config) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ adapterId, config }))
-  // 通知同页其他组件（Tab1）写入目标已变更
-  window.dispatchEvent(new CustomEvent('integration-changed', { detail: { adapterId } }))
+  const all = readAll()
+  all.adapterId = adapterId
+  all.configs = { ...(all.configs || {}), [adapterId]: config }
+  writeAll(all)
+  // 通知同页其他组件（Tab1）写入目标已变更（非浏览器环境跳过）
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new CustomEvent('integration-changed', { detail: { adapterId } }))
+  }
 }
 
 // 订阅写入目标变更（供 Tab1 等组件实时刷新按钮文案）
