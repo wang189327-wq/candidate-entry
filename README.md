@@ -62,26 +62,6 @@
 | **Tab5 接入配置** | **写入目标可插拔**：飞书多维表格 / 任意 Webhook（钉钉、企业微信、自建 API）/ Supabase 云端 / 本地 CSV 导出，一键切换 + 连通性测试 |
 | **系统层** | 登录认证（bcrypt 校验）、用户管理与密码重置、页签切换状态保留 |
 
-### 📸 界面一览
-
-**空态**（初始界面）与**工作态**（已识别 / 已选中）各一版，便于对照了解交互前后的状态变化。
-
-| 空态 · Tab1 信息识别 | 空态 · Tab2 SAP 代码管理 |
-|---|---|
-| ![Tab1 空态](docs/images/tab1-empty.png) | ![Tab2 空态](docs/images/tab2-empty.png) |
-
-| 空态 · Tab3 图片库 | 空态 · Tab4 登录账号 | 空态 · Tab5 接入配置 |
-|---|---|---|
-| ![Tab3 空态](docs/images/tab3-empty.png) | ![Tab4 空态](docs/images/tab4-empty.png) | ![Tab5 空态](docs/images/tab5-empty.png) |
-
-| 工作态 · Tab1 信息识别 | 工作态 · Tab2 SAP 代码管理 |
-|---|---|
-| ![Tab1 工作态](docs/images/tab1-filled.png) | ![Tab2 工作态](docs/images/tab2-filled.png) |
-
-| 工作态 · Tab3 图片库 | 工作态 · Tab4 登录账号 | 工作态 · Tab5 接入配置 |
-|---|---|---|
-| ![Tab3 工作态](docs/images/tab3-filled.png) | ![Tab4 工作态](docs/images/tab4-filled.png) | ![Tab5 工作态](docs/images/tab5-filled.png) |
-
 ### 🔌 写入目标可插拔（不必用飞书）
 
 「识别」与「写入」彻底解耦：解析逻辑只产出标准记录（姓名 / 年龄 / 性别 / 联系方式 / SAP代码 / 意向岗位 / 门店名称），**写到哪里由你在「接入配置」中选**：
